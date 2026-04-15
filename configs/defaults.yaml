@@ -1,0 +1,13 @@
+logger:
+    outputs: [jsonl, scope, wandb]
+    wandb_filter: 'score|length|fps|train/loss/|train/rand/|report/loss/|eval/loss/'
+
+env:
+    vizdoom:
+        skip: 4
+        level: 3
+        timeout: 525
+        size: 64
+        cheat: false
+        switch_every: 1.5e6
+        dy_type: 0

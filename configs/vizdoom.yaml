@@ -1,0 +1,12 @@
+vizdoom_continual:
+    task: vizdoom_DeadlyCorridor
+    env.vizdoom.switch_every: 1.5e6
+    run:
+        steps: 1e7
+        train_ratio: 32
+
+vizdoom_fixed:
+    task: vizdoom_DeadlyCorridor
+    run:
+        steps: 2e6
+        train_ratio: 32
