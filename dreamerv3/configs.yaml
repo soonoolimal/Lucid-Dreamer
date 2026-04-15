@@ -76,6 +76,8 @@ defaults:
             size: [64, 64]
             repeat: 1
             camera: -1
+        # vizdoom:
+        #   see configs/defaults.yaml
 
     replay:
         size: 5e6
@@ -396,6 +398,13 @@ loconav:
     task: loconav_ant_maze_m
     env.loconav.repeat: 1
     run.train_ratio: 256
+
+# vizdoom_continual:
+#   task: vizdoom_DeadlyCorridor
+#   see configs/vizdoom.yaml
+# vizdoom_fixed:
+#   task: vizdoom_DeadlyCorridor
+#   see configs/vizdoom.yaml
 
 multicpu:
     batch_size: 12
