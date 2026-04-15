@@ -22,7 +22,7 @@ LOGDIR_TPL = 'logs/continual_baseline/{scn}/eval_{timestamp}'
 
 
 def main(argv=None):
-    [elements.print(line) for line in Agent.banner]
+    # [elements.print(line) for line in Agent.banner]
 
     configs = load_configs('vizdoom.yaml')
     parsed, other = elements.Flags(configs=['defaults', 'vizdoom_continual']).parse_known(argv)
