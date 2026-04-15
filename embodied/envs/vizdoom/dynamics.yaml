@@ -1,0 +1,63 @@
+scn_dir: scenarios
+
+rew_shifts: [survive, recover]
+
+DeadlyCorridor:
+  id: deadly_corridor
+  act_type: discrete
+  act_dim: 7
+  natural_hp: 100
+  death_penalty: 100
+  n_dynamics: 4
+  0: {obs_shift: null, rew_shift: null}
+  1: {obs_shift: null, rew_shift: survive}
+  2: {obs_shift: BIGBRIK1-to-TEKWALL4, rew_shift: null}
+  3: {obs_shift: BIGBRIK1-to-TEKWALL4, rew_shift: survive}
+
+DefendLine:
+  id: defend_the_line
+  act_type: discrete
+  act_dim: 3
+  natural_hp: 100
+  death_penalty: 1
+  n_dynamics: 4
+  0: {obs_shift: null, rew_shift: null}
+  1: {obs_shift: null, rew_shift: survive}
+  2: {obs_shift: BRICK12-to-TEKWALL4, rew_shift: null}
+  3: {obs_shift: BRICK12-to-TEKWALL4, rew_shift: survive}
+
+DefendCenter:
+  id: defend_the_center
+  act_type: discrete
+  act_dim: 3
+  natural_hp: 100
+  death_penalty: 1
+  n_dynamics: 4
+  0: {obs_shift: null, rew_shift: null}
+  1: {obs_shift: null, rew_shift: survive}
+  2: {obs_shift: TANROCK2-to-TEKWALL4, rew_shift: null}
+  3: {obs_shift: TANROCK2-to-TEKWALL4, rew_shift: survive}
+
+HealthGathering:
+  id: health_gathering
+  act_type: discrete
+  act_dim: 3
+  natural_hp: 100
+  death_penalty: 100
+  n_dynamics: 4
+  0: {obs_shift: null, rew_shift: null}
+  1: {obs_shift: null, rew_shift: recover}
+  2: {obs_shift: GSTONE1-to-TEKWALL4, rew_shift: null}
+  3: {obs_shift: GSTONE1-to-TEKWALL4, rew_shift: recover}
+
+HealthGatheringSupreme:
+  id: health_gathering_supreme
+  act_type: discrete
+  act_dim: 3
+  natural_hp: 100
+  death_penalty: 100
+  n_dynamics: 4
+  0: {obs_shift: null, rew_shift: null}
+  1: {obs_shift: null, rew_shift: recover}
+  2: {obs_shift: STONE2-to-TEKWALL4, rew_shift: null}
+  3: {obs_shift: STONE2-to-TEKWALL4, rew_shift: recover}
