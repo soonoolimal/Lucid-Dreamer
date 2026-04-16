@@ -43,7 +43,7 @@ python main.py continual_baseline --eval \
 ## 1. Per-Dynamics Dreamer
 
 Trains DreamerV3 on a fixed dynamics type and periodically collects offline HDF5 data for Alarm training.
-HDF5 samples are saved to `logs/per_dy_dreamer/{scn}/dy{dy_type}/{timestamp}/samples/type-{dy_type}_s{seed}.hdf5`.
+HDF5 samples are saved to `data/{scn}/dreamer/{timestamp}_dy{dy_type}_s{seed}.hdf5`.
 
 ### 1.1. Training
 
@@ -74,20 +74,32 @@ CUDA_VISIBLE_DEVICES=3 python main.py per_dy_dreamer --task vizdoom_DeadlyCorrid
 Collects offline data with a random agent (no training). Cheat mode is enabled automatically.
 
 ```bash
-python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0 --random_agent True &
-python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 1 --random_agent True &
-python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 2 --random_agent True &
+python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0 --random_agent True && \
+python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 1 --random_agent True && \
+python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 2 --random_agent True && \
 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 3 --random_agent True
 ```
 
 ### 1.3. Sample Only
 
 Loads a saved checkpoint and collects HDF5 samples without training.
+HDF5 files are saved to `data/DeadlyCorridor/dreamer/` or `data/DeadlyCorridor/random/` depending on the checkpoint type.
 
+Dreamer checkpoint:
 ```bash
 python main.py per_dy_dreamer --sample \
     --task vizdoom_DeadlyCorridor \
     --env.vizdoom.dy_type 0 \
     --run.from_checkpoint logs/per_dy_dreamer/DeadlyCorridor/dy0/{timestamp}/ckpt \
+    --run.n_sample_eps 50
+```
+
+Random agent checkpoint:
+```bash
+python main.py per_dy_dreamer --sample \
+    --task vizdoom_DeadlyCorridor \
+    --env.vizdoom.dy_type 0 \
+    --random_agent True \
+    --run.from_checkpoint logs/per_dy_dreamer/DeadlyCorridor/dy0_random/{timestamp}/ckpt \
     --run.n_sample_eps 50
 ```

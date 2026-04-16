@@ -14,6 +14,7 @@ _*/
 *.pt
 *.pth
 
+data/
 embodied/envs/vizdoom/scenarios
 ongoing/
 logs/
