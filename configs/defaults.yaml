@@ -1,6 +1,10 @@
+run:
+    sample_every: 0
+    n_sample_eps: 0
+
 logger:
     outputs: [jsonl, scope, wandb]
-    wandb_filter: 'score|length|fps|train/loss/|train/rand/|report/loss/|eval/loss/'
+    wandb_filter: 'score|length|fps|train/loss/|train/rand/|report/loss/|report/openloop/|eval/loss/'
 
 env:
     vizdoom:

@@ -4,9 +4,15 @@ vizdoom_continual:
     run:
         steps: 1e7
         train_ratio: 32
+        log_every: 60
+        report_every: 100000
 
 vizdoom_fixed:
     task: vizdoom_DeadlyCorridor
     run:
         steps: 2e6
         train_ratio: 32
+        log_every: 60
+        report_every: 100000
+        sample_every: 100000
+        n_sample_eps: 25
