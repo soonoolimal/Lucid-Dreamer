@@ -1,5 +1,4 @@
-import importlib
-import inspect
+import collections
 import os
 import pathlib
 import sys
@@ -8,23 +7,20 @@ from functools import partial as bind
 
 ROOT = pathlib.Path(__file__).parents[2]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / 'scripts'))
 
 import elements
 import numpy as np
 import portal
-import ruamel.yaml as yaml
+from common import (load_configs, make_agent, make_env, make_logger,
+                    make_replay, make_stream)
 
 import embodied
-from dreamerv3.agent import Agent
 
-DREAMER_CONFIGS = ROOT / 'dreamerv3' / 'configs.yaml'
-CONFIGS_DIR = ROOT / 'configs'
 LOGDIR_TPL = 'logs/continual_baseline/{scn}/{timestamp}'
 
 
 def main(argv=None):
-    # [elements.print(line) for line in Agent.banner]
-
     configs = load_configs('vizdoom.yaml')
     parsed, other = elements.Flags(configs=['defaults', 'vizdoom_continual']).parse_known(argv)
     config = elements.Config(configs['defaults'])
@@ -33,7 +29,10 @@ def main(argv=None):
     config = elements.Flags(config).parse(other)
 
     scn_name = config.task.split('_', 1)[1]
-    config = config.update(logdir=LOGDIR_TPL.format(scn=scn_name, timestamp=datetime.now().strftime('%y%m%d_%H%M%S')))
+    config = config.update(logdir=LOGDIR_TPL.format(
+        scn=scn_name,
+        timestamp=datetime.now().strftime('%y%m%d_%H%M%S'),
+    ))
     logdir = elements.Path(config.logdir)
     print('Logdir:', logdir)
     logdir.mkdir()
@@ -67,162 +66,155 @@ def main(argv=None):
         replay_context=config.replay_context,
     )
 
-    embodied.run.train_eval(
-        bind(make_agent, config),
+    train_eval(
+        bind(make_agent, config, bind(make_env, config, vizdoom_cls='ContinualVizDoom')),
         bind(make_replay, config, 'replay'),
         bind(make_replay, config, 'eval_replay', 'eval'),
-        bind(make_env, config),
-        bind(make_env, config),
+        bind(make_env, config, vizdoom_cls='ContinualVizDoom'),
+        bind(make_env, config, vizdoom_cls='ContinualVizDoom'),
         bind(make_stream, config),
-        bind(make_logger, config),
+        bind(make_logger, config, 'continual_baseline', 'train'),
         args,
     )
 
 
-def load_configs(*extra_files):
-    yml = yaml.YAML(typ='safe')
-    configs = yml.load(elements.Path(DREAMER_CONFIGS).read())
-    our_defaults = yml.load(elements.Path(CONFIGS_DIR / 'defaults.yaml').read())
-    for key, val in our_defaults.items():
-        if isinstance(val, dict) and key in configs['defaults']:
-            configs['defaults'][key].update(val)
-        else:
-            configs['defaults'][key] = val
-    for fname in extra_files:
-        configs.update(yml.load(elements.Path(CONFIGS_DIR / fname).read()))
-    return configs
+def train_eval(make_agent, make_replay_train, make_replay_eval, make_env_train, make_env_eval, make_stream, make_logger, args):
+    agent = make_agent()
+    replay_train = make_replay_train()
+    replay_eval = make_replay_eval()
+    logger = make_logger()
 
+    logdir = elements.Path(args.logdir)
+    step = logger.step
+    usage = elements.Usage(**args.usage)
+    train_agg = elements.Agg()
+    train_episodes = collections.defaultdict(elements.Agg)
+    train_epstats = elements.Agg()
+    eval_episodes = collections.defaultdict(elements.Agg)
+    eval_epstats = elements.Agg()
+    policy_fps = elements.FPS()
+    train_fps = elements.FPS()
 
-def make_logger(config):
-    step = elements.Counter()
-    logdir = config.logdir
-    multiplier = config.env.get(config.task.split('_')[0], {}).get('repeat', 1)
-    outputs = []
-    outputs.append(elements.logger.TerminalOutput(config.logger.filter, 'Agent'))
-    for output in config.logger.outputs:
-        if output == 'jsonl':
-            outputs.append(elements.logger.JSONLOutput(logdir, 'metrics.jsonl'))
-            outputs.append(elements.logger.JSONLOutput(logdir, 'scores.jsonl', 'episode/score'))
-        elif output == 'tensorboard':
-            outputs.append(elements.logger.TensorBoardOutput(logdir, config.logger.fps))
-        elif output == 'scope':
-            outputs.append(elements.logger.ScopeOutput(elements.Path(logdir)))
-        elif output == 'wandb':
-            run_name = '/'.join(logdir.split('/')[-3:])
-            outputs.append(elements.logger.WandBOutput(
-                name=run_name, pattern=config.logger.wandb_filter,
-                project='Lucid-Dreamer', group='continual_baseline', job_type='train',
-            ))
-        else:
-            raise NotImplementedError(output)
-    return elements.Logger(step, outputs, multiplier)
+    batch_steps = args.batch_size * args.batch_length
+    should_train = elements.when.Ratio(args.train_ratio / batch_steps)
+    should_log = embodied.LocalClock(args.log_every)
+    should_video = elements.when.Every(args.report_every, initial=False)
+    should_save = embodied.LocalClock(args.save_every)
 
+    @elements.timer.section('logfn')
+    def logfn(tran, worker, mode):
+        episodes = dict(train=train_episodes, eval=eval_episodes)[mode]
+        epstats = dict(train=train_epstats, eval=eval_epstats)[mode]
+        episode = episodes[worker]
+        if tran['is_first']:
+            episode.reset()
+        episode.add('score', tran['reward'], agg='sum')
+        episode.add('length', 1, agg='sum')
+        episode.add('rewards', tran['reward'], agg='stack')
+        for key, value in tran.items():
+            if value.dtype == np.uint8 and value.ndim == 3:
+                if worker == 0:
+                    episode.add(f'policy_{key}', value, agg='stack')
+            elif key.startswith('log/'):
+                assert value.ndim == 0, (key, value.shape, value.dtype)
+                episode.add(key + '/avg', value, agg='avg')
+                episode.add(key + '/max', value, agg='max')
+                episode.add(key + '/sum', value, agg='sum')
+        if tran['is_last']:
+            result = episode.result()
+            logger.add({
+                'score': result.pop('score'),
+                'length': result.pop('length'),
+            }, prefix='episode')
+            rew = result.pop('rewards')
+            if len(rew) > 1:
+                result['reward_rate'] = (np.abs(rew[1:] - rew[:-1]) >= 0.01).mean()
+            epstats.add(result)
 
-def make_env(config, _index, **overrides):
-    suite, task = config.task.split('_', 1)
-    ctor = {
-        'vizdoom': 'embodied.envs.vizdoom:ContinualVizDoom',
-        'dummy': 'embodied.envs.dummy:Dummy',
-        'gym': 'embodied.envs.from_gym:FromGym',
-        'crafter': 'embodied.envs.crafter:Crafter',
-        'dmc': 'embodied.envs.dmc:DMC',
-        'atari': 'embodied.envs.atari:Atari',
-        'atari100k': 'embodied.envs.atari:Atari',
-        'dmlab': 'embodied.envs.dmlab:DMLab',
-        'minecraft': 'embodied.envs.minecraft:Minecraft',
-        'loconav': 'embodied.envs.loconav:LocoNav',
-        'procgen': 'embodied.envs.procgen:ProcGen',
-        'bsuite': 'embodied.envs.bsuite:BSuite',
-    }[suite]
-    module, cls = ctor.split(':')
-    module = importlib.import_module(module)
-    ctor = getattr(module, cls)
-    kwargs = dict(config.env.get(suite, {}))
-    kwargs.update(overrides)
-    valid = inspect.signature(ctor).parameters
-    kwargs = {k: v for k, v in kwargs.items() if k in valid}
-    env = ctor(task, **kwargs)
-    return wrap_env(env, config)
+    fns = [bind(make_env_train, i) for i in range(args.envs)]
+    driver_train = embodied.Driver(fns, parallel=(not args.debug))
+    driver_train.on_step(lambda tran, _: step.increment())
+    driver_train.on_step(lambda tran, _: policy_fps.step())
+    driver_train.on_step(replay_train.add)
+    driver_train.on_step(bind(logfn, mode='train'))
 
+    fns = [bind(make_env_eval, i) for i in range(args.eval_envs)]
+    driver_eval = embodied.Driver(fns, parallel=(not args.debug))
+    driver_eval.on_step(replay_eval.add)
+    driver_eval.on_step(bind(logfn, mode='eval'))
+    driver_eval.on_step(lambda tran, _: policy_fps.step())
 
-def wrap_env(env, _config):
-    for name, space in env.act_space.items():
-        if not space.discrete:
-            env = embodied.wrappers.NormalizeAction(env, name)
-    env = embodied.wrappers.UnifyDtypes(env)
-    env = embodied.wrappers.CheckSpaces(env)
-    for name, space in env.act_space.items():
-        if not space.discrete:
-            env = embodied.wrappers.ClipAction(env, name)
-    return env
+    stream_train = iter(agent.stream(make_stream(replay_train, 'train')))
+    stream_report = iter(agent.stream(make_stream(replay_train, 'report')))
+    stream_eval = iter(agent.stream(make_stream(replay_eval, 'eval')))
 
+    carry_train = [agent.init_train(args.batch_size)]
+    carry_report = agent.init_report(args.batch_size)
+    carry_eval = agent.init_report(args.batch_size)
 
-def make_replay(config, folder, mode='train'):
-    batlen = config.batch_length if mode == 'train' else config.report_length
-    consec = config.consec_train if mode == 'train' else config.consec_report
-    capacity = config.replay.size if mode == 'train' else config.replay.size / 10
-    length = consec * batlen + config.replay_context
-    assert config.batch_size * length <= capacity
+    def trainfn(tran, worker):
+        if len(replay_train) < args.batch_size * args.batch_length:
+            return
+        for _ in range(should_train(step)):
+            with elements.timer.section('stream_next'):
+                batch = next(stream_train)
+            carry_train[0], outs, mets = agent.train(carry_train[0], batch)
+            train_fps.step(batch_steps)
+            if 'replay' in outs:
+                replay_train.update(outs['replay'])
+            train_agg.add(mets, prefix='train')
+    driver_train.on_step(trainfn)
 
-    directory = elements.Path(config.logdir) / folder
-    if config.replicas > 1:
-        directory /= f'{config.replica:05}'
-    kwargs = dict(
-        length=length, capacity=int(capacity), online=config.replay.online,
-        chunksize=config.replay.chunksize, directory=directory,
-    )
+    def reportfn(carry, stream):
+        agg = elements.Agg()
+        for _ in range(args.report_batches):
+            carry, mets = agent.report(carry, next(stream))
+            agg.add(mets)
+        return carry, agg.result()
 
-    if config.replay.fracs.uniform < 1 and mode == 'train':
-        assert config.jax.compute_dtype in ('bfloat16', 'float32'), (
-            'Gradient scaling for low-precision training can produce invalid loss outputs '
-            'that are incompatible with prioritized replay.'
-        )
-        recency = 1.0 / np.arange(1, capacity + 1) ** config.replay.recexp
-        selectors = embodied.replay.selectors
-        kwargs['selector'] = selectors.Mixture(
-            dict(
-                uniform=selectors.Uniform(),
-                priority=selectors.Prioritized(**config.replay.prio),
-                recency=selectors.Recency(recency),
-            ), config.replay.fracs
-        )
+    cp = elements.Checkpoint(logdir / 'ckpt')
+    cp.step = step
+    cp.agent = agent
+    cp.replay_train = replay_train
+    cp.replay_eval = replay_eval
+    if args.from_checkpoint:
+        elements.checkpoint.load(args.from_checkpoint, dict(
+            agent=bind(agent.load, regex=args.from_checkpoint_regex)
+        ))
+    cp.load_or_save()
 
-    return embodied.replay.Replay(**kwargs)
+    print('Start training loop')
+    train_policy = lambda *args: agent.policy(*args, mode='train')
+    eval_policy = lambda *args: agent.policy(*args, mode='eval')
+    driver_train.reset(agent.init_policy)
+    while step < args.steps:
+        driver_train(train_policy, steps=10)
 
+        if should_video(step) and len(replay_train):
+            print('Video / Evaluation')
+            driver_eval.reset(agent.init_policy)
+            driver_eval(eval_policy, episodes=args.eval_eps)
+            logger.add(eval_epstats.result(), prefix='epstats')
+            carry_report, mets = reportfn(carry_report, stream_report)
+            logger.add(mets, prefix='report')
+            if len(replay_eval):
+                carry_eval, mets = reportfn(carry_eval, stream_eval)
+                logger.add(mets, prefix='eval')
 
-def make_stream(config, replay, mode):
-    fn = bind(replay.sample, config.batch_size, mode)
-    stream = embodied.streams.Stateless(fn)
-    stream = embodied.streams.Consec(
-        stream,
-        length=config.batch_length if mode == 'train' else config.report_length,
-        consec=config.consec_train if mode == 'train' else config.consec_report,
-        prefix=config.replay_context,
-        strict=(mode == 'train'),
-        contiguous=True,
-    )
-    return stream
+        if should_log(step):
+            logger.add(train_agg.result())
+            logger.add(train_epstats.result(), prefix='epstats')
+            logger.add(replay_train.stats(), prefix='replay')
+            logger.add(usage.stats(), prefix='usage')
+            logger.add({'fps/policy': policy_fps.result()})
+            logger.add({'fps/train': train_fps.result()})
+            logger.add({'timer': elements.timer.stats()['summary']})
+            logger.write()
 
+        if should_save(step):
+            cp.save()
 
-def make_agent(config):
-    env = make_env(config, 0)
-    obs_space = {k: v for k, v in env.obs_space.items() if not k.startswith('log/')}
-    act_space = {k: v for k, v in env.act_space.items() if k != 'reset'}
-    env.close()
-    if config.random_agent:
-        return embodied.RandomAgent(obs_space, act_space)
-    return Agent(obs_space, act_space, elements.Config(
-        **config.agent,
-        logdir=config.logdir,
-        seed=config.seed,
-        jax=config.jax,
-        batch_size=config.batch_size,
-        batch_length=config.batch_length,
-        replay_context=config.replay_context,
-        report_length=config.report_length,
-        replica=config.replica,
-        replicas=config.replicas,
-    ))
+    logger.close()
 
 
 if __name__ == '__main__':
