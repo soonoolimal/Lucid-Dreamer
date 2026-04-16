@@ -29,16 +29,16 @@ BANNERS = {
         r"---                       Per-Dynamics Dreamer                          ---",
     ],
 
-    # Alarm pretraining on offline HDF5 data
-    'alarm': [
+    # Inception pretraining on offline HDF5 data
+    'inception': [
         r"---    _   _                 ---",
         r"---   /_\ | |__ _ _ _ _ __   ---",
         r"---  / _ \| / _` | '_| '  \  ---",
         r"--- /_/ \_\_\__,_|_| |_|_|_| ---",
-        r"---           Alarm          ---",
+        r"---         Inception        ---",
     ],
 
-    # DreamerV3 + Alarm under non-stationary dynamics
+    # DreamerV3 + Inception under non-stationary dynamics
     'lucid_dreamer': [
         r"---  _           _    _  ___                           __   ______  ---",
         r"--- | |   _  _ __(_)__| ||   \ _ _ ___ __ _ _ __  ___ _ \ \ / /__ / ---",

@@ -217,7 +217,7 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args, con
 
 
 def _collect_samples(agent, make_env, config, dy_type, step, n_eps, timestamp=None):
-    """Runs n_eps eval episodes to HDF5 for Alarm training.
+    """Runs n_eps eval episodes to HDF5 for Inception training.
 
     Output: data/{scn}/{ds_type}/{timestamp}_dy{dy_type}_s{seed}.hdf5
         observations  (N, H, W, 3)     uint8
