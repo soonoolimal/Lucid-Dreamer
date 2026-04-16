@@ -102,7 +102,7 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args, con
     batch_steps = args.batch_size * args.batch_length
     should_train = elements.when.Ratio(args.train_ratio / batch_steps)
     should_log = embodied.LocalClock(args.log_every)
-    should_report = elements.when.Every(args.report_every, initial=False)
+    should_report = elements.when.Every(args.report_every)
     should_save = embodied.LocalClock(args.save_every)
 
     # step-based trigger: collect HDF5 samples every sample_every env steps

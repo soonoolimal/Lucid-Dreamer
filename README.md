@@ -2,7 +2,14 @@
 
 ## Setup
 
+Requires CUDA 12.8 (cu128).
+
 ```bash
+conda env create -f conda_env.yaml
+conda activate lucid-dreamer
+```
+
+```
 python -m embodied.envs.vizdoom.build_scenarios
 ```
 

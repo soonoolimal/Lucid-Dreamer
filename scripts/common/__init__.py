@@ -99,9 +99,13 @@ def make_logger(config, group, job_type):
             outputs.append(elements.logger.ScopeOutput(elements.Path(logdir)))
         elif output == 'wandb':
             run_name = '/'.join(logdir.split('/')[1:])
+            wb_group = group
+            if config.run.get('debug', False):
+                run_name = 'debug_' + run_name
+                wb_group = 'debug_' + group
             outputs.append(elements.logger.WandBOutput(
                 name=run_name, pattern=config.logger.wandb_filter,
-                project='Lucid-Dreamer', group=group, job_type=job_type,
+                project='Lucid-Dreamer', group=wb_group, job_type=job_type,
             ))
         else:
             raise NotImplementedError(output)

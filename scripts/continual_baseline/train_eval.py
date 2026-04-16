@@ -98,7 +98,7 @@ def train_eval(make_agent, make_replay_train, make_replay_eval, make_env_train, 
     batch_steps = args.batch_size * args.batch_length
     should_train = elements.when.Ratio(args.train_ratio / batch_steps)
     should_log = embodied.LocalClock(args.log_every)
-    should_video = elements.when.Every(args.report_every, initial=False)
+    should_video = elements.when.Every(args.report_every)
     should_save = embodied.LocalClock(args.save_every)
 
     @elements.timer.section('logfn')
