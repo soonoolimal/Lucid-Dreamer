@@ -42,7 +42,7 @@ python main.py continual_baseline --eval \
 
 ## 1. Per-Dynamics Dreamer
 
-Trains DreamerV3 on a fixed dynamics type and periodically collects offline HDF5 data for Alarm training.
+Trains DreamerV3 on a fixed dynamics type and periodically collects offline HDF5 data for Inception training.
 HDF5 samples are saved to `data/{scn}/dreamer/{timestamp}_dy{dy_type}_s{seed}.hdf5`.
 
 ### 1.1. Training
