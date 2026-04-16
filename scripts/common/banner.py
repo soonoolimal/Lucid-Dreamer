@@ -9,6 +9,16 @@ BANNERS = {
         r"---         Continual Baseline      ---",
     ],
 
+    # random agent data collection (no training)
+    'random_agent': [
+        r"---  ___          ___         ___                           __   ______ ---",
+        r"--- | _ \___ _ _ |   \ _  _  |   \ _ _ ___ __ _ _ __  ___ _ \ \ / /__ / ---",
+        r"--- |  _/ -_) '_|| |) | || | | |) | '_/ -_) _` | '  \/ -_) '/\ V / |_ \ ---",
+        r"--- |_| \___|_|  |___/ \_, | |___/|_| \___\__,_|_|_|_\___|_|  \_/ |___/ ---",
+        r"---                    |__/                                             ---",
+        r"---                    Random Dreamer Sampling                          ---",
+    ],
+
     # fixed-dynamics DreamerV3 + periodic HDF5 offline data collection
     'per_dy_dreamer': [
         r"---  ___          ___         ___                           __   ______ ---",

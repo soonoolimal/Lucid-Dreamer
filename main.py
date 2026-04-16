@@ -38,7 +38,12 @@ def main():
         print(f"Error: '{task}' does not support --{mode}. Valid flags: {valid or 'none'}")
         sys.exit(1)
 
-    print_banner(task)
+    banner_key = task
+    if task == 'per_dy_dreamer' and '--random_agent' in argv:
+        idx = argv.index('--random_agent')
+        if idx + 1 < len(argv) and argv[idx + 1].lower() == 'true':
+            banner_key = 'random_agent'
+    print_banner(banner_key)
     importlib.import_module(modes[mode]).main(argv)
 
 

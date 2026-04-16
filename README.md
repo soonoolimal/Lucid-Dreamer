@@ -9,8 +9,9 @@ conda env create -f conda_env.yaml
 conda activate lucid-dreamer
 ```
 
-```
-python -m embodied.envs.vizdoom.build_scenarios
+```bash
+python -m embodied.envs.vizdoom.build_scenarios          # default variants
+python -m embodied.envs.vizdoom.build_scenarios --cheat  # cheat variants (required for random agent; needs ACC)
 ```
 
 ## 0. Baseline
@@ -29,13 +30,6 @@ For debug:
 python main.py continual_baseline --configs defaults vizdoom_continual debug --task vizdoom_DeadlyCorridor
 ```
 
-To run multiple seeds in parallel across GPUs:
-
-```bash
-CUDA_VISIBLE_DEVICES=0 python main.py continual_baseline --task vizdoom_DeadlyCorridor --seed 0 &
-CUDA_VISIBLE_DEVICES=1 python main.py continual_baseline --task vizdoom_DeadlyCorridor --seed 1 &
-CUDA_VISIBLE_DEVICES=2 python main.py continual_baseline --task vizdoom_DeadlyCorridor --seed 2 &
-```
 ### 0.2. Evaluation Only
 
 Requires a saved checkpoint from a training run.
@@ -45,8 +39,6 @@ python main.py continual_baseline --eval \
     --task vizdoom_DeadlyCorridor \
     --run.from_checkpoint logs/continual_baseline/DeadlyCorridor/{timestamp}/ckpt
 ```
-
----
 
 ## 1. Per-Dynamics Dreamer
 
@@ -74,7 +66,7 @@ To run all dy_types in parallel across GPUs:
 CUDA_VISIBLE_DEVICES=0 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0 &
 CUDA_VISIBLE_DEVICES=1 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 1 &
 CUDA_VISIBLE_DEVICES=2 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 2 &
-CUDA_VISIBLE_DEVICES=3 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 3 &
+CUDA_VISIBLE_DEVICES=3 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 3
 ```
 
 ### 1.2. Random Agent Sampling
@@ -82,7 +74,10 @@ CUDA_VISIBLE_DEVICES=3 python main.py per_dy_dreamer --task vizdoom_DeadlyCorrid
 Collects offline data with a random agent (no training). Cheat mode is enabled automatically.
 
 ```bash
-python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0 --random_agent True
+python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0 --random_agent True &
+python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 1 --random_agent True &
+python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 2 --random_agent True &
+python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 3 --random_agent True
 ```
 
 ### 1.3. Sample Only

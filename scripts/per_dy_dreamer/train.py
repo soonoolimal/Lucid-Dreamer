@@ -19,7 +19,7 @@ from common import (load_configs, make_agent, make_env, make_logger,
 
 import embodied
 
-LOGDIR_TPL = 'logs/per_dy_dreamer/{scn}/dy{dy_type}/{timestamp}'
+LOGDIR_TPL = 'logs/per_dy_dreamer/{scn}/dy{dy_type}{suffix}/{timestamp}'
 
 
 def main(argv=None):
@@ -38,6 +38,7 @@ def main(argv=None):
     dy_type = int(config.env.vizdoom.dy_type)
     config = config.update(logdir=LOGDIR_TPL.format(
         scn=scn_name, dy_type=dy_type,
+        suffix='_random' if config.random_agent else '',
         timestamp=datetime.now().strftime('%y%m%d_%H%M%S'),
     ))
     logdir = elements.Path(config.logdir)
@@ -107,6 +108,7 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args, con
 
     # step-based trigger: collect HDF5 samples every sample_every env steps
     next_sample_step = [int(args.sample_every)]
+    last_video = [None]  # most recent worker-0 episode frames for random agent video logging
 
     @elements.timer.section('logfn')
     def logfn(tran, worker):
@@ -134,6 +136,8 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args, con
             rew = result.pop('rewards')
             if len(rew) > 1:
                 result['reward_rate'] = (np.abs(rew[1:] - rew[:-1]) >= 0.01).mean()
+            if config.random_agent and worker == 0 and 'policy_image' in result:
+                last_video[0] = result.pop('policy_image')
             epstats.add(result)
 
     fns = [bind(make_env, i) for i in range(args.envs)]
@@ -178,21 +182,27 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args, con
     while step < args.steps:
         driver(policy, steps=10)
 
-        if should_report(step) and len(replay):
-            agg = elements.Agg()
-            for _ in range(args.consec_report * args.report_batches):
-                carry_report, mets = agent.report(carry_report, next(stream_report))
-                agg.add(mets)
-            logger.add(agg.result(), prefix='report')
+        if should_report(step):
+            if config.random_agent:
+                if last_video[0] is not None:
+                    logger.add({'policy_image': last_video[0]}, prefix='report')
+                    logger.write()
+            elif len(replay):
+                agg = elements.Agg()
+                for _ in range(args.consec_report * args.report_batches):
+                    carry_report, mets = agent.report(carry_report, next(stream_report))
+                    agg.add(mets)
+                logger.add(agg.result(), prefix='report')
 
         if should_log(step):
-            logger.add(train_agg.result())
+            if not config.random_agent:
+                logger.add(train_agg.result())
+                logger.add(replay.stats(), prefix='replay')
+                logger.add({'fps/train': train_fps.result()})
+                logger.add({'timer': elements.timer.stats()['summary']})
             logger.add(epstats.result(), prefix='epstats')
-            logger.add(replay.stats(), prefix='replay')
             logger.add(usage.stats(), prefix='usage')
             logger.add({'fps/policy': policy_fps.result()})
-            logger.add({'fps/train': train_fps.result()})
-            logger.add({'timer': elements.timer.stats()['summary']})
             logger.write()
 
         if should_save(step):
