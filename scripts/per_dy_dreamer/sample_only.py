@@ -13,8 +13,6 @@ import portal
 from common import load_configs, make_agent, make_env
 from per_dy_dreamer.train import _collect_samples
 
-LOGDIR_TPL = 'logs/per_dy_dreamer/{scn}/dy{dy_type}/samples_{timestamp}'
-
 
 def main(argv=None):
     configs = load_configs('vizdoom.yaml')
@@ -26,14 +24,12 @@ def main(argv=None):
 
     scn_name = config.task.split('_', 1)[1]
     dy_type = int(config.env.vizdoom.dy_type)
-    config = config.update(logdir=LOGDIR_TPL.format(
-        scn=scn_name, dy_type=dy_type,
-        timestamp=datetime.now().strftime('%y%m%d_%H%M%S'),
-    ))
-    logdir = elements.Path(config.logdir)
-    print('Logdir:', logdir)
-    logdir.mkdir()
-    config.save(logdir / 'config.yaml')
+    timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
+
+    ds_type = 'random' if config.random_agent else 'dreamer'
+    data_dir = pathlib.Path(ROOT / 'data' / scn_name / ds_type)
+    data_dir.mkdir(parents=True, exist_ok=True)
+    config.save(str(data_dir / f'{timestamp}_dy{dy_type}_s{config.seed}_config.yaml'))
 
     if 'JOB_COMPLETION_INDEX' in os.environ:
         config = config.update(replica=int(os.environ['JOB_COMPLETION_INDEX']))
@@ -43,7 +39,6 @@ def main(argv=None):
         elements.timer.global_timer.enabled = config.logger.timer
 
     portal.setup(
-        errfile=config.errfile and logdir / 'error',
         clientkw=dict(logging_color='cyan'),
         serverkw=dict(logging_color='cyan'),
         initfns=[init],
@@ -62,9 +57,9 @@ def main(argv=None):
         bind(make_env, config),
         config,
         dy_type,
-        logdir,
         step=0,  # dummy; only inference
         n_eps=int(config.run.n_sample_eps),
+        timestamp=timestamp,
     )
 
 

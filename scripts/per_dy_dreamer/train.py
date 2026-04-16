@@ -92,6 +92,7 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args, con
     logger = make_logger()
 
     logdir = elements.Path(args.logdir)
+    sample_timestamp = pathlib.Path(str(logdir)).name
     step = logger.step
     usage = elements.Usage(**args.usage)
     train_agg = elements.Agg()
@@ -209,16 +210,16 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args, con
             cp.save()
 
         if args.sample_every > 0 and int(step) >= next_sample_step[0]:
-            _collect_samples(agent, make_env, config, dy_type, logdir, int(step), int(args.n_sample_eps))
+            _collect_samples(agent, make_env, config, dy_type, int(step), int(args.n_sample_eps), timestamp=sample_timestamp)
             next_sample_step[0] = int(step) + int(args.sample_every)
 
     logger.close()
 
 
-def _collect_samples(agent, make_env, config, dy_type, logdir, step, n_eps):
+def _collect_samples(agent, make_env, config, dy_type, step, n_eps, timestamp=None):
     """Runs n_eps eval episodes to HDF5 for Alarm training.
 
-    Output: logdir/samples/type-{dy_type}_s{seed}.hdf5
+    Output: data/{scn}/{ds_type}/{timestamp}_dy{dy_type}_s{seed}.hdf5
         observations  (N, H, W, 3)     uint8
         actions
             discrete: (N, 1)           int64
@@ -278,9 +279,11 @@ def _collect_samples(agent, make_env, config, dy_type, logdir, step, n_eps):
 
     max_ep_len = config.env.vizdoom.timeout // config.env.vizdoom.skip
 
-    samples_dir = elements.Path(logdir) / 'samples'
-    samples_dir.mkdir()
-    hdf5_path = str(samples_dir / f'type-{dy_type}_s{config.seed}.hdf5')
+    scn_name = config.task.split('_', 1)[1]
+    ds_type = 'random' if config.random_agent else 'dreamer'
+    data_dir = ROOT / 'data' / scn_name / ds_type
+    pathlib.Path(data_dir).mkdir(parents=True, exist_ok=True)
+    hdf5_path = str(data_dir / f'{timestamp}_dy{dy_type}_s{config.seed}.hdf5')
 
     datasets = [
         ('observations', obs_arr),
