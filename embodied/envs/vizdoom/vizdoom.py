@@ -80,11 +80,21 @@ class VizDoom(embodied.Env):
 
     @functools.cached_property
     def act_space(self):
-        n = self._env.action_space.n
-        return {
-            'action': elements.Space(np.int32, (), 0, n),
-            'reset': elements.Space(bool),
-        }
+        ac_space = self._env.action_space
+        if isinstance(ac_space, gym.spaces.Discrete):
+            space = {
+                'action': elements.Space(np.int32, (), 0, int(ac_space.n)),
+            }
+        elif isinstance(ac_space, gym.spaces.Dict):
+            # Deathmatch: binary button index + continuous mouse deltas
+            space = {
+                'action': elements.Space(np.int32, (), 0, int(ac_space['binary'].n)),
+                'action_cont': elements.Space(np.float32, ac_space['continuous'].shape),
+            }
+        else:
+            raise NotImplementedError(f'Unsupported action space: {type(ac_space)}')
+        space['reset'] = elements.Space(bool)
+        return space
 
     def step(self, action):
         if action['reset'] or self._done:
@@ -92,7 +102,16 @@ class VizDoom(embodied.Env):
             obs, _ = self._env.reset()
             return self._obs(obs, 0.0, is_first=True)
 
-        obs, rew, term, trunc, _ = self._env.step(action['action'])
+        ac_space = self._env.action_space
+        if isinstance(ac_space, gym.spaces.Dict):
+            gym_action = {
+                'binary': int(action['action']),
+                'continuous': np.asarray(action['action_cont'], dtype=np.float32),
+            }
+        else:
+            gym_action = action['action']
+
+        obs, rew, term, trunc, _ = self._env.step(gym_action)
         self._done = term or trunc
         return self._obs(
             obs,
