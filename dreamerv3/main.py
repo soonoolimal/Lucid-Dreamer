@@ -218,7 +218,7 @@ def make_replay(config, folder, mode='train'):
 
 
 def make_env(config, index, **overrides):
-    suite, task = config.task.split('_', 1)  # e.g. 'atari_pong' → ('atari', 'pong')
+    suite, task = config.task.split('_', 1)  # e.g., 'atari_pong' -> ('atari', 'pong')
     # if suite == 'memmaze':
         # import memory_maze  # noqa
         # from embodied.envs import from_gym

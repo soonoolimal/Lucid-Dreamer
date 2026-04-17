@@ -358,7 +358,7 @@ class Encoder(nj.Module):
             K = self.kernel
             imgs = [obs[k] for k in sorted(self.imgkeys)]
             assert all(x.dtype == jnp.uint8 for x in imgs)
-            x = nn.cast(jnp.concatenate(imgs, -1), force=True) / 255 - 0.5  # image: [0, 255] → [-0.5, 0.5]
+            x = nn.cast(jnp.concatenate(imgs, -1), force=True) / 255 - 0.5  # image: [0, 255] -> [-0.5, 0.5]
             x = x.reshape((-1, *x.shape[bdims:]))
             for i, depth in enumerate(self.depths):
                 if self.outer and i == 0:

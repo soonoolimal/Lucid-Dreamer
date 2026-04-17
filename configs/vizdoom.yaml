@@ -2,7 +2,7 @@ vizdoom_continual:
     task: vizdoom_DeadlyCorridor
     env.vizdoom.switch_every: 1.5e6
     run:
-        steps: 1e7
+        steps: 6e6
         train_ratio: 32
         log_every: 30
         report_every: 20000

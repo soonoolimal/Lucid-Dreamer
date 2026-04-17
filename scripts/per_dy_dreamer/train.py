@@ -319,7 +319,7 @@ def _collect_samples(agent, make_env, config, dy_type, step, n_eps, timestamp=No
             hf.attrs['num_episodes'] = int(hf.attrs['num_episodes']) + n_eps
             hf.attrs['num_transitions'] = n + m
 
-    print(f'[HDF5] step={step} n_eps={n_eps} n_trans={len(all_obs)} → {hdf5_path}')
+    print(f'[HDF5] step={step} n_eps={n_eps} n_trans={len(all_obs)} -> {hdf5_path}')
 
 
 if __name__ == '__main__':
