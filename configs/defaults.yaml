@@ -7,7 +7,7 @@ logger:
     outputs: [jsonl, scope, wandb]
     wandb_filter: 'score|length|fps|train/loss/|train/rand/|report/loss/|report/openloop/|report/policy_image|eval/loss/'
     wandb_project: Lucid-Dreamer
-    wandb_group: ~
+    wandb_group: ''
 
 env:
     vizdoom:
