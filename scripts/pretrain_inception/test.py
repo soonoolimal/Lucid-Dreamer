@@ -1,4 +1,5 @@
 import argparse
+import json
 import pathlib
 import sys
 
@@ -10,6 +11,7 @@ sys.path.insert(0, str(SCRIPTS_INC))
 
 import torch
 import torch.nn.functional as F
+import wandb
 import yaml
 from tqdm import tqdm
 
@@ -20,7 +22,6 @@ from inception.models.base import DynEncModel, DynPredModel, ObsEncModel
 OBS_ENC_REGISTRY = {cls.__name__: cls for cls in ObsEncModel.__subclasses__()}
 DYN_ENC_REGISTRY = {cls.__name__: cls for cls in DynEncModel.__subclasses__()}
 DYN_PRED_REGISTRY = {cls.__name__: cls for cls in DynPredModel.__subclasses__()}
-
 
 CKPT_DIR_TPL = 'logs/inception/{scn}/{ds_type}/{timestamp}'
 
@@ -76,6 +77,66 @@ def _print_results(cm, n_dynamics):
     macro_r = sum(recalls) / n_dynamics
     macro_f1 = sum(f1s) / n_dynamics
     print(f"{'macro':<8} {macro_p:>10.4f} {macro_r:>10.4f} {macro_f1:>10.4f}")
+
+
+def run_test(dye, dyp, test_loader, device, n_dynamics, wandb_cfg=None, logdir=None):
+    """Run test inference and print results. Models must already be loaded."""
+    dye.to(device).eval()
+    dyp.to(device).eval()
+
+    all_preds = []
+    all_labels = []
+    ce_loss_sum = 0.0
+    n_batches = 0
+
+    with torch.no_grad():
+        for batch in tqdm(test_loader, desc='Test', dynamic_ncols=True):
+            observations = batch['observations'].to(device)
+            actions = batch['actions'].to(device)
+            rewards = batch['rewards'].to(device)
+            returns_to_go = batch['returns_to_go'].to(device)
+            timesteps = batch['timesteps'].to(device)
+            mask = batch['mask'].to(device)
+            labels = batch['labels'][:, -1]
+
+            enc_out = dye(observations, actions, rewards, returns_to_go, timesteps, mask)
+            logits = dyp(enc_out)  # (B, n_dynamics)
+            loss = F.cross_entropy(logits, labels.to(device))
+
+            ce_loss_sum += loss.item()
+            n_batches += 1
+            all_preds.append(logits.argmax(dim=-1).cpu())
+            all_labels.append(labels)
+
+    all_preds = torch.cat(all_preds)
+    all_labels = torch.cat(all_labels)
+    ce_loss = ce_loss_sum / n_batches
+
+    print(f'\nTest CE loss: {ce_loss:.4f}')
+    cm = _compute_cm(all_preds, all_labels, n_dynamics)
+    _print_results(cm, n_dynamics)
+
+    acc = cm.diagonal().sum().item() / cm.sum().item()
+    per_class_acc = {}
+    for c in range(n_dynamics):
+        total = cm[c].sum().item()
+        per_class_acc[c] = cm[c, c].item() / total if total > 0 else 0.0
+
+    if logdir is not None:
+        metrics = {'ce_loss': ce_loss, 'acc': acc, **{f'acc_class{c}': v for c, v in per_class_acc.items()}}
+        with open(pathlib.Path(logdir) / 'test_metrics.json', 'w') as f:
+            json.dump(metrics, f, indent=2)
+
+    if wandb_cfg is not None:
+        log = {'test/ce_loss': ce_loss, 'test/acc': acc,
+               **{f'test/acc_class{c}': v for c, v in per_class_acc.items()}}
+        wandb.init(
+            project=wandb_cfg['project'],
+            group=wandb_cfg['group'],
+            name=wandb_cfg['run_name'],
+        )
+        wandb.log(log)
+        wandb.finish()
 
 
 def main(argv=None):
@@ -143,41 +204,13 @@ def main(argv=None):
     print(f'Loaded DyE: {dye_ckpt}')
     print(f'Loaded DyP: {dyp_ckpt}')
 
-    dye.to(device).eval()
-    dyp.to(device).eval()
-
-    # Test inference
-    n_dynamics = cfg['n_dynamics']
-    all_preds = []
-    all_labels = []
-    ce_loss_sum = 0.0
-    n_batches = 0
-
-    with torch.no_grad():
-        for batch in tqdm(test_loader, desc='Test', dynamic_ncols=True):
-            observations = batch['observations'].to(device)
-            actions = batch['actions'].to(device)
-            rewards = batch['rewards'].to(device)
-            returns_to_go = batch['returns_to_go'].to(device)
-            timesteps = batch['timesteps'].to(device)
-            mask = batch['mask'].to(device)
-            labels = batch['labels'][:, -1]
-
-            enc_out = dye(observations, actions, rewards, returns_to_go, timesteps, mask)
-            logits = dyp(enc_out)  # (B, n_dynamics)
-            loss = F.cross_entropy(logits, labels.to(device))
-
-            ce_loss_sum += loss.item()
-            n_batches += 1
-            all_preds.append(logits.argmax(dim=-1).cpu())
-            all_labels.append(labels)
-
-    all_preds = torch.cat(all_preds)
-    all_labels = torch.cat(all_labels)
-
-    print(f'\nTest CE loss: {ce_loss_sum / n_batches:.4f}')
-    cm = _compute_cm(all_preds, all_labels, n_dynamics)
-    _print_results(cm, n_dynamics)
+    run_test(dye, dyp, test_loader, device, cfg['n_dynamics'],
+        wandb_cfg={
+            'project': cfg['wandb']['project'], 'group': cfg['wandb']['group'],
+            'run_name': f'inception_test/{args.scn}/{args.ds_type}/{args.timestamp}'
+        },
+        logdir=run_dir,
+    )
 
 
 if __name__ == '__main__':

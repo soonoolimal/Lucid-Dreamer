@@ -3,9 +3,8 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
-from tqdm import tqdm
-
 import wandb
+from tqdm import tqdm
 
 
 class BaseTrainer(ABC):

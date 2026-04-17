@@ -105,7 +105,8 @@ python main.py per_dy_dreamer --sample \
 ## 2. Inception Pretraining
 
 Trains the dynamics encoder and dynamics predictor on offline HDF5 data collected in Task 1.
-Checkpoints are saved to `logs/inception/{scn}/{ds_type}/{timestamp}/`.
+Checkpoints and `test_metrics.json` are saved to `logs/inception/{scn}/{ds_type}/{timestamp}/`.
+Test evaluation on the held-out split runs automatically at the end of training.
 
 ### 2.1. Training
 
@@ -127,7 +128,7 @@ For debug:
 python main.py pretrain_inception --scn DeadlyCorridor --ds_type random --debug
 ```
 
-### 2.2. Test
+### 2.2. Test Only
 
 Evaluates a trained checkpoint on the held-out test split.
 

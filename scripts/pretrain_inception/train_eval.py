@@ -9,8 +9,11 @@ SCRIPTS_INC = pathlib.Path(__file__).parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(SCRIPTS_INC))
 
+from test import run_test
+
 import torch
 import yaml
+from common import KST
 from trainer import DTEncTrainer, DTPredTrainer
 
 import inception.models  # register all subclasses
@@ -41,7 +44,7 @@ def main(argv=None):
     with open(ROOT / 'configs/inception.yaml') as f:
         cfg = yaml.safe_load(f)['inception']
 
-    timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
+    timestamp = datetime.now(tz=KST).strftime('%y%m%d_%H%M%S')
     run_dir = str(ROOT / CKPT_DIR_TPL.format(scn=args.scn, ds_type=args.ds_type, timestamp=timestamp))
     device = torch.device(args.device or cfg['device'])
 
@@ -50,7 +53,7 @@ def main(argv=None):
 
     # Offline Data
     data_cfg = cfg['data']
-    train_sets, valid_sets, _ = ldu.load_hdf5_datasets(
+    train_sets, valid_sets, test_sets = ldu.load_hdf5_datasets(
         paths=ldu.make_hdf5_paths(args.scn, args.ds_type, cfg['seed'], cfg['n_dynamics'], args.timestamps),
         gamma=data_cfg['gamma'],
         train_ratio=data_cfg['train_ratio'],
@@ -67,6 +70,10 @@ def main(argv=None):
     )
     valid_loader = ldu.make_dataloader(
         valid_sets, data_cfg['seq_len'], data_cfg['batch_size'],
+        shuffle=False, drop_last=False, num_workers=data_cfg['num_workers'],
+    )
+    test_loader = ldu.make_dataloader(
+        test_sets, data_cfg['seq_len'], data_cfg['batch_size'],
         shuffle=False, drop_last=False, num_workers=data_cfg['num_workers'],
     )
 
@@ -136,6 +143,16 @@ def main(argv=None):
         'wandb_run_name': f'inception_pred/{run_name_base}',
     })
     pred_trainer.train()
+    pred_trainer.load_best()
+
+    run_test(
+        dye, dyp, test_loader, device, cfg['n_dynamics'],
+        wandb_cfg={
+            'project': wandb_project, 'group': wandb_group,
+            'run_name': f'inception_test/{run_name_base}'
+        },
+        logdir=run_dir,
+    )
 
 
 if __name__ == '__main__':
