@@ -7,6 +7,7 @@ ROOT = pathlib.Path(__file__).parents[2]
 SCRIPTS_INC = pathlib.Path(__file__).parent
 
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / 'scripts'))
 sys.path.insert(0, str(SCRIPTS_INC))
 
 from test import run_test
