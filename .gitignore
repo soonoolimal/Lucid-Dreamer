@@ -16,7 +16,6 @@ _*/
 
 data/
 embodied/envs/vizdoom/scenarios
-ongoing/
 logs/
 wandb/
 

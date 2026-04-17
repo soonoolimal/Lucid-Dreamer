@@ -51,7 +51,7 @@ class Kick:
     @torch.no_grad()
     def step(self, obs, act, rew, ts):
         """
-        Called on every env step:
+        Called on every Dreamer env step:
             Feeds real interaction into the sliding buffer.
             Returns None until buffer reaches seq_len, then False/True each step.
 

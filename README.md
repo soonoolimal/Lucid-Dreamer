@@ -137,3 +137,73 @@ python main.py pretrain_inception --test \
     --scn DeadlyCorridor --ds_type dreamer \
     --timestamp 260417_120000
 ```
+
+## 3. Lucid Dreamer
+
+Loads a pretrained Inception checkpoint and trains Dreamer under non-stationary dynamics.
+When a dynamics shift is detected, actor-critic updates switch from imagination to real replay experience.
+
+### 3.1. Training
+
+```bash
+python main.py lucid_dreamer \
+    --ds_type dreamer \
+    --inc_timestamp 260417_120000
+```
+
+- `--ds_type`: which Inception model to use (`dreamer` or `random`)
+- `--inc_timestamp`: timestamp of the Inception training run under `logs/inception/{scn}/{ds_type}/`
+
+For debug:
+```bash
+python main.py lucid_dreamer \
+    --configs defaults vizdoom_lucid lucid_dreamer debug \
+    --ds_type dreamer \
+    --inc_timestamp 260417_120000
+```
+
+## Output Directories
+
+```
+data/
+└── {scn}/
+    ├── dreamer/                                         # Task 1-1/1-3: Dreamer policy
+    │   ├── {timestamp}_dy{dy_type}_s{seed}.hdf5
+    │   └── {timestamp}_dy{dy_type}_s{seed}_config.yaml  # Task 1-3 only
+    └── random/                                          # Task 1-2/1-3: Random agent
+        ├── {timestamp}_dy{dy_type}_s{seed}.hdf5
+        └── {timestamp}_dy{dy_type}_s{seed}_config.yaml  # Task 1-3 only
+
+logs/
+├── continual_baseline/{scn}/{timestamp}/                # Task 0
+│   ├── ckpt/
+│   ├── replay/
+│   ├── eval_replay/
+│   ├── config.yaml
+│   ├── metrics.jsonl
+│   └── scores.jsonl
+├── per_dy_dreamer/{scn}/                                # Task 1-1/1-2
+│   ├── dy{dy_type}/{timestamp}/
+│   │   ├── ckpt/
+│   │   ├── replay/
+│   │   ├── config.yaml
+│   │   └── metrics.jsonl
+│   └── dy{dy_type}_random/{timestamp}/
+│       ├── ckpt/
+│       ├── replay/
+│       ├── config.yaml
+│       └── metrics.jsonl
+├── inception/{scn}/{ds_type}/{timestamp}/               # Task 2
+│   ├── {DyEclassname}_s{seed}_best.pt
+│   ├── {DyEclassname}_s{seed}_epoch{N}.pt
+│   ├── {DyPclassname}_s{seed}_best.pt
+│   ├── {DyPclassname}_s{seed}_epoch{N}.pt
+│   └── test_metrics.json
+└── lucid_dreamer/{scn}/{timestamp}/                     # Task 3
+    ├── ckpt/
+    ├── replay/
+    ├── eval_replay/
+    ├── config.yaml
+    ├── metrics.jsonl
+    └── scores.jsonl
+```

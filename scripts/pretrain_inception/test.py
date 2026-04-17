@@ -11,12 +11,12 @@ sys.path.insert(0, str(SCRIPTS_INC))
 
 import torch
 import torch.nn.functional as F
-import wandb
 import yaml
 from tqdm import tqdm
 
 import inception.models  # register all subclasses
 import inception.utils.load as ldu
+import wandb
 from inception.models.base import DynEncModel, DynPredModel, ObsEncModel
 
 OBS_ENC_REGISTRY = {cls.__name__: cls for cls in ObsEncModel.__subclasses__()}

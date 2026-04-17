@@ -7,15 +7,15 @@ from functools import partial as bind
 import elements
 import numpy as np
 import ruamel.yaml as yaml
-import wandb
 
 import embodied
+import wandb
 from dreamerv3.agent import Agent
 
 KST = timezone(timedelta(hours=9))
 
 ROOT = pathlib.Path(__file__).parents[2]
-DREAMER_CONFIGS = ROOT / 'dreamerv3' / 'configs.yaml'
+DREAMER_CONFIGS = ROOT / 'configs' / 'dreamerv3.yaml'
 CONFIGS_DIR = ROOT / 'configs'
 
 
@@ -105,7 +105,7 @@ def _patch_wandb_video():
     _orig = wandb.Video
     wandb.Video = lambda data, **kw: _orig(data, format=kw.pop('format', 'gif'), **kw)
 
-def make_logger(config, group, job_type):
+def make_logger(config, job_type):
     _patch_wandb_video()
     step = elements.Counter()
     logdir = config.logdir
@@ -122,12 +122,12 @@ def make_logger(config, group, job_type):
             outputs.append(elements.logger.ScopeOutput(elements.Path(logdir)))
         elif output == 'wandb':
             run_name = '/'.join(logdir.split('/')[1:])
-            wb_group = group
-            project = 'Lucid-Dreamer'
+            wb_group = config.logger.wandb_group
+            project = config.logger.wandb_project
             if config.run.get('debug', False):
                 run_name = 'debug_' + run_name
-                wb_group = 'debug_' + group
-                project = 'Lucid-Dreamer-Debug'
+                wb_group = 'debug_' + wb_group
+                project = project + '-Debug'
             outputs.append(elements.logger.WandBOutput(
                 name=run_name, pattern=config.logger.wandb_filter,
                 project=project, group=wb_group, job_type=job_type,

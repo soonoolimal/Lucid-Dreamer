@@ -79,7 +79,7 @@ def main(argv=None):
         bind(make_replay, config, 'replay'),
         bind(make_env, config),
         bind(make_stream, config),
-        bind(make_logger, config, 'per_dy_dreamer', 'train'),
+        bind(make_logger, config, 'train'),
         args,
         config,
         dy_type,

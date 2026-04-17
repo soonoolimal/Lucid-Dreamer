@@ -65,7 +65,7 @@ def main(argv=None):
     embodied.run.eval_only(
         bind(make_agent, config, bind(make_env, config, vizdoom_cls='ContinualVizDoom')),
         bind(make_env, config, vizdoom_cls='ContinualVizDoom'),
-        bind(make_logger, config, 'continual_baseline', 'eval'),
+        bind(make_logger, config, 'eval'),
         args,
     )
 

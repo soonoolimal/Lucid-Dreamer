@@ -16,6 +16,9 @@ SCRIPTS = {
         'train': 'scripts.pretrain_inception.train_eval',
         'test':  'scripts.pretrain_inception.test',
     },
+    'lucid_dreamer': {
+        'train': 'scripts.lucid_dreamer.train_eval',
+    },
 }
 
 

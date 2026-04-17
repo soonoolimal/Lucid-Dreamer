@@ -1,80 +1,80 @@
 inception:
-  n_dynamics: 4
-  seed: 0
-  device: cuda
+    n_dynamics: 4
+    seed: 0
+    device: cuda
 
-  wandb:
-    project: Lucid-Dreamer
-    group: inception
+    wandb:
+        project: Lucid-Dreamer
+        group: inception
 
-  data:
-    gamma: 1.0
-    train_ratio: 0.7
-    valid_ratio: 0.2
-    seq_len: 64
-    batch_size: 64
-    num_workers: 4
+    data:
+        gamma: 1.0
+        train_ratio: 0.7
+        valid_ratio: 0.2
+        seq_len: 64
+        batch_size: 64
+        num_workers: 4
 
-  obs_enc:
-    select: BasicObsEncoder
-    BasicObsEncoder:
-      enc_dim: 128
-      in_ch: 3
-      out_ch: 256
-      n_layers: 4
-      img_size: 64
-      pool_size: ~
+    obs_enc:
+        select: BasicObsEncoder
+        BasicObsEncoder:
+            enc_dim: 128
+            in_ch: 3
+            out_ch: 256
+            n_layers: 4
+            img_size: 64
+            pool_size: ~
 
-  dyn_enc:
-    select: DecisionTransformer
-    DecisionTransformer:
-      last_k: 5
-      pass_h: all
-      n_layer: 4
-      n_head: 4
-      resid_pdrop: 0.1
-      embd_pdrop: 0.1
-      attn_pdrop: 0.1
-    train_kw:
-      lr: 3.0e-5
-      weight_decay: 1.0e-4
-      betas: [0.9, 0.95]
-      loss_mode: joint
-      lambda_act: 0.1
-      lambda_rtg: 0.1
-      lambda_obs: 1.0
-      lambda_var: 1.0
-      grad_clip_act: 10.0
-      grad_clip_rtg: 10.0
-      grad_clip_obs: 10.0
-      log_grad_norm: true
-      stop_gradient: false
-      num_epochs: 50
-      patience: 5
-      epoch_save_interval: 5
-      load_only: false
-
-  dyn_pred:
-    select: DTPredictor
-    DTPredictor:
-      p_dim: 128
-    train_kw:
-      lr: 1.0e-3
-      weight_decay: 1.0e-4
-      betas: [0.9, 0.95]
-      num_epochs: 50
-      patience: 5
-      epoch_save_interval: 5
-      load_only: false
-
-  debug:
     dyn_enc:
-      train_kw:
-        num_epochs: 10
-        patience: 5
-        epoch_save_interval: 2
+        select: DecisionTransformer
+        DecisionTransformer:
+            last_k: 5
+            pass_h: all
+            n_layer: 4
+            n_head: 4
+            resid_pdrop: 0.1
+            embd_pdrop: 0.1
+            attn_pdrop: 0.1
+        train_kw:
+            lr: 3.0e-5
+            weight_decay: 1.0e-4
+            betas: [0.9, 0.95]
+            loss_mode: joint
+            lambda_act: 0.1
+            lambda_rtg: 0.1
+            lambda_obs: 1.0
+            lambda_var: 1.0
+            grad_clip_act: 10.0
+            grad_clip_rtg: 10.0
+            grad_clip_obs: 10.0
+            log_grad_norm: true
+            stop_gradient: false
+            num_epochs: 50
+            patience: 5
+            epoch_save_interval: 5
+            load_only: false
+
     dyn_pred:
-      train_kw:
-        num_epochs: 10
-        patience: 5
-        epoch_save_interval: 2
+        select: DTPredictor
+        DTPredictor:
+            p_dim: 128
+        train_kw:
+            lr: 1.0e-3
+            weight_decay: 1.0e-4
+            betas: [0.9, 0.95]
+            num_epochs: 50
+            patience: 5
+            epoch_save_interval: 5
+            load_only: false
+
+    debug:
+        dyn_enc:
+            train_kw:
+                num_epochs: 10
+                patience: 5
+                epoch_save_interval: 2
+        dyn_pred:
+            train_kw:
+                num_epochs: 10
+                patience: 5
+                epoch_save_interval: 2
