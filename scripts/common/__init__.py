@@ -1,19 +1,42 @@
 import importlib
 import inspect
 import pathlib
+from datetime import timedelta, timezone
 from functools import partial as bind
 
 import elements
 import numpy as np
 import ruamel.yaml as yaml
+import wandb
 
 import embodied
-import wandb
 from dreamerv3.agent import Agent
+
+KST = timezone(timedelta(hours=9))
 
 ROOT = pathlib.Path(__file__).parents[2]
 DREAMER_CONFIGS = ROOT / 'dreamerv3' / 'configs.yaml'
 CONFIGS_DIR = ROOT / 'configs'
+
+
+def resolve_checkpoint(argv, path_fn):
+    """Pop --timestamp from argv and inject --run.from_checkpoint via path_fn.
+
+    Args:
+        argv: argument list
+        path_fn: callable(scn, ts, argv) -> str, returns checkpoint path
+    """
+    argv = list(argv or [])
+    if '--timestamp' not in argv:
+        return argv
+    idx = argv.index('--timestamp')
+    ts = argv.pop(idx + 1)
+    argv.pop(idx)
+    task_idx = argv.index('--task') if '--task' in argv else -1
+    if task_idx < 0:
+        raise ValueError('--task is required when using --timestamp')
+    scn = argv[task_idx + 1].split('_', 1)[1]
+    return argv + ['--run.from_checkpoint', path_fn(scn, ts, argv)]
 
 
 def load_configs(*extra_files):

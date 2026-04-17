@@ -101,7 +101,7 @@ def main(argv=None):
         cfg['dyn_enc']['train_kw'].update(cfg['debug']['dyn_enc']['train_kw'])
         cfg['dyn_pred']['train_kw'].update(cfg['debug']['dyn_pred']['train_kw'])
 
-    run_name_base = f"inception/{args.scn}/{args.ds_type}/{timestamp}"
+    run_name_base = f"{args.scn}/{args.ds_type}/{timestamp}"
     wandb_project = cfg['wandb']['project']
     wandb_group = cfg['wandb']['group']
     if args.debug:
@@ -122,7 +122,7 @@ def main(argv=None):
     enc_trainer = DTEncTrainer(dye, train_loader, valid_loader, device, {
         **cfg['dyn_enc']['train_kw'],
         **shared_cfg,
-        'wandb_run_name': f'{run_name_base}_enc',
+        'wandb_run_name': f'inception_enc/{run_name_base}',
     })
     enc_trainer.train()
     enc_trainer.load_best()
@@ -133,7 +133,7 @@ def main(argv=None):
     pred_trainer = DTPredTrainer(dye, dyp, train_loader, valid_loader, device, {
         **cfg['dyn_pred']['train_kw'],
         **shared_cfg,
-        'wandb_run_name': f'{run_name_base}_pred',
+        'wandb_run_name': f'inception_pred/{run_name_base}',
     })
     pred_trainer.train()
 

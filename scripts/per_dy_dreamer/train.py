@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 
 import elements
 import portal
-from common import (load_configs, make_agent, make_env, make_logger,
+from common import (KST, load_configs, make_agent, make_env, make_logger,
                     make_replay, make_stream)
 
 import embodied
@@ -39,7 +39,7 @@ def main(argv=None):
     config = config.update(logdir=LOGDIR_TPL.format(
         scn=scn_name, dy_type=dy_type,
         suffix='_random' if config.random_agent else '',
-        timestamp=datetime.now().strftime('%y%m%d_%H%M%S'),
+        timestamp=datetime.now(tz=KST).strftime('%y%m%d_%H%M%S'),
     ))
     logdir = elements.Path(config.logdir)
     print('Logdir:', logdir)

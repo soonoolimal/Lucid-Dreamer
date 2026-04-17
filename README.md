@@ -37,7 +37,7 @@ Requires a saved checkpoint from a training run.
 ```bash
 python main.py continual_baseline --eval \
     --task vizdoom_DeadlyCorridor \
-    --run.from_checkpoint logs/continual_baseline/DeadlyCorridor/{timestamp}/ckpt
+    --timestamp {timestamp}
 ```
 
 ## 1. Per-Dynamics Dreamer
@@ -88,7 +88,7 @@ Dreamer checkpoint:
 python main.py per_dy_dreamer --sample \
     --task vizdoom_DeadlyCorridor \
     --env.vizdoom.dy_type 0 \
-    --run.from_checkpoint logs/per_dy_dreamer/DeadlyCorridor/dy0/{timestamp}/ckpt \
+    --timestamp {timestamp} \
     --run.n_sample_eps 50
 ```
 
@@ -98,7 +98,7 @@ python main.py per_dy_dreamer --sample \
     --task vizdoom_DeadlyCorridor \
     --env.vizdoom.dy_type 0 \
     --random_agent True \
-    --run.from_checkpoint logs/per_dy_dreamer/DeadlyCorridor/dy0_random/{timestamp}/ckpt \
+    --timestamp {timestamp} \
     --run.n_sample_eps 50
 ```
 
@@ -125,4 +125,14 @@ python main.py pretrain_inception --scn DeadlyCorridor --ds_type dreamer \
 For debug:
 ```bash
 python main.py pretrain_inception --scn DeadlyCorridor --ds_type random --debug
+```
+
+### 2.2. Test
+
+Evaluates a trained checkpoint on the held-out test split.
+
+```bash
+python main.py pretrain_inception --test \
+    --scn DeadlyCorridor --ds_type dreamer \
+    --timestamp 260417_120000
 ```

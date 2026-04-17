@@ -14,6 +14,7 @@ SCRIPTS = {
     },
     'pretrain_inception': {
         'train': 'scripts.pretrain_inception.train_eval',
+        'test':  'scripts.pretrain_inception.test',
     },
 }
 
@@ -33,6 +34,9 @@ def main():
     elif '--sample' in argv:
         argv = [a for a in argv if a != '--sample']
         mode = 'sample'
+    elif '--test' in argv:
+        argv = [a for a in argv if a != '--test']
+        mode = 'test'
     else:
         mode = next(iter(modes))
 

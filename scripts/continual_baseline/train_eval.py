@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 import elements
 import numpy as np
 import portal
-from common import (load_configs, make_agent, make_env, make_logger,
+from common import (KST, load_configs, make_agent, make_env, make_logger,
                     make_replay, make_stream)
 
 import embodied
@@ -31,7 +31,7 @@ def main(argv=None):
     scn_name = config.task.split('_', 1)[1]
     config = config.update(logdir=LOGDIR_TPL.format(
         scn=scn_name,
-        timestamp=datetime.now().strftime('%y%m%d_%H%M%S'),
+        timestamp=datetime.now(tz=KST).strftime('%y%m%d_%H%M%S'),
     ))
     logdir = elements.Path(config.logdir)
     print('Logdir:', logdir)
