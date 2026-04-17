@@ -55,13 +55,11 @@ python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_typ
 ```
 
 For debug:
-
 ```bash
 python main.py per_dy_dreamer --configs defaults vizdoom_fixed debug --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0
 ```
 
 To run all dy_types in parallel across GPUs:
-
 ```bash
 CUDA_VISIBLE_DEVICES=0 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0 &
 CUDA_VISIBLE_DEVICES=1 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 1 &
@@ -102,4 +100,29 @@ python main.py per_dy_dreamer --sample \
     --random_agent True \
     --run.from_checkpoint logs/per_dy_dreamer/DeadlyCorridor/dy0_random/{timestamp}/ckpt \
     --run.n_sample_eps 50
+```
+
+## 2. Inception Pretraining
+
+Trains the dynamics encoder and dynamics predictor on offline HDF5 data collected in Task 1.
+Checkpoints are saved to `logs/inception/{scn}/{ds_type}/{timestamp}/`.
+
+### 2.1. Training
+
+By default, the latest HDF5 file is selected automatically for each dy_type.
+
+```bash
+python main.py pretrain_inception --scn DeadlyCorridor --ds_type dreamer
+python main.py pretrain_inception --scn DeadlyCorridor --ds_type random
+```
+
+To specify timestamps explicitly (one per dy_type, in ascending order):
+```bash
+python main.py pretrain_inception --scn DeadlyCorridor --ds_type dreamer \
+    --timestamps 260417_120000 260417_130000 260417_140000 260417_150000
+```
+
+For debug:
+```bash
+python main.py pretrain_inception --scn DeadlyCorridor --ds_type random --debug
 ```

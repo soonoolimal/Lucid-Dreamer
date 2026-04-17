@@ -12,6 +12,9 @@ SCRIPTS = {
         'train':  'scripts.per_dy_dreamer.train',
         'sample': 'scripts.per_dy_dreamer.sample_only',
     },
+    'pretrain_inception': {
+        'train': 'scripts.pretrain_inception.train_eval',
+    },
 }
 
 
@@ -39,7 +42,9 @@ def main():
         sys.exit(1)
 
     banner_key = task
-    if task == 'per_dy_dreamer' and '--random_agent' in argv:
+    if task == 'pretrain_inception':
+        banner_key = 'inception'
+    elif task == 'per_dy_dreamer' and '--random_agent' in argv:
         idx = argv.index('--random_agent')
         if idx + 1 < len(argv) and argv[idx + 1].lower() == 'true':
             banner_key = 'random_agent'
