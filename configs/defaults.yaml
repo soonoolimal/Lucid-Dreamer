@@ -2,6 +2,7 @@ run:
     sample_every: 0
     n_sample_eps: 0
     debug: false
+    resume_timestamp: ''
 
 logger:
     outputs: [jsonl, scope, wandb]
