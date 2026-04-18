@@ -129,12 +129,12 @@ def make_logger(config, job_type):
                 run_name = 'debug_' + run_name
                 wb_group = 'debug_' + wb_group
                 project = project + '-Debug'
-            wandb_id = re.sub(r'[^a-zA-Z0-9_-]', '-', run_name)[:64]
+            # wandb_id = re.sub(r'[^a-zA-Z0-9_-]', '-', run_name)[:64]
             outputs.append(elements.logger.WandBOutput(
                 name=run_name, pattern=config.logger.wandb_filter,
                 project=project, group=wb_group, job_type=job_type,
-                id=wandb_id, resume='allow',
-                settings=wandb.Settings(init_timeout=300),
+                # id=wandb_id, resume='allow',
+                # settings=wandb.Settings(init_timeout=300),
             ))
         else:
             raise NotImplementedError(output)
