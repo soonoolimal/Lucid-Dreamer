@@ -1,15 +1,16 @@
 import importlib
 import inspect
 import pathlib
+import re
 from datetime import timedelta, timezone
 from functools import partial as bind
 
 import elements
 import numpy as np
 import ruamel.yaml as yaml
+import wandb
 
 import embodied
-import wandb
 from dreamerv3.agent import Agent
 
 KST = timezone(timedelta(hours=9))
@@ -128,9 +129,11 @@ def make_logger(config, job_type):
                 run_name = 'debug_' + run_name
                 wb_group = 'debug_' + wb_group
                 project = project + '-Debug'
+            wandb_id = re.sub(r'[^a-zA-Z0-9_-]', '-', run_name)[:64]
             outputs.append(elements.logger.WandBOutput(
                 name=run_name, pattern=config.logger.wandb_filter,
                 project=project, group=wb_group, job_type=job_type,
+                id=wandb_id, resume='allow',
             ))
         else:
             raise NotImplementedError(output)
