@@ -25,6 +25,11 @@ python main.py continual_baseline --task vizdoom_DeadlyCorridor
 python main.py continual_baseline --task vizdoom_DeadlyCorridor --seed 1
 ```
 
+To resume a crashed run:
+```bash
+python main.py continual_baseline --task vizdoom_DeadlyCorridor --run.resume_timestamp 260418_030705
+```
+
 For debug:
 ```
 python main.py continual_baseline --configs defaults vizdoom_continual debug --task vizdoom_DeadlyCorridor
@@ -54,6 +59,13 @@ python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_typ
 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 3
 ```
 
+To resume a crashed run, pass the timestamp of the original run:
+```bash
+python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 1 \
+    --run.resume_timestamp 260418_030705
+```
+This reuses the same logdir (`logs/per_dy_dreamer/.../260418_030705/`), loading the latest checkpoint and replay buffer from disk.
+
 For debug:
 ```bash
 python main.py per_dy_dreamer --configs defaults vizdoom_fixed debug --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0
@@ -61,10 +73,7 @@ python main.py per_dy_dreamer --configs defaults vizdoom_fixed debug --task vizd
 
 To run all dy_types in parallel across GPUs:
 ```bash
-CUDA_VISIBLE_DEVICES=0 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0 &
-CUDA_VISIBLE_DEVICES=1 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 1 &
-CUDA_VISIBLE_DEVICES=2 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 2 &
-CUDA_VISIBLE_DEVICES=3 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 3
+CUDA_VISIBLE_DEVICES=0 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0
 ```
 
 ### 1.2. Random Agent Sampling
@@ -153,6 +162,14 @@ python main.py lucid_dreamer \
 
 - `--ds_type`: which Inception model to use (`dreamer` or `random`)
 - `--inc_timestamp`: timestamp of the Inception training run under `logs/inception/{scn}/{ds_type}/`
+
+To resume a crashed run:
+```bash
+python main.py lucid_dreamer \
+    --ds_type dreamer \
+    --inc_timestamp 260417_120000 \
+    --run.resume_timestamp 260418_030705
+```
 
 For debug:
 ```bash
