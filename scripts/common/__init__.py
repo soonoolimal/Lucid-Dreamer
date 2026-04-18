@@ -148,12 +148,19 @@ def make_replay(config, folder, mode='train'):
     length = consec * batlen + config.replay_context
     assert config.batch_size * length <= capacity
 
-    directory = elements.Path(config.logdir) / folder
-    if config.replicas > 1:
-        directory /= f'{config.replica:05}'
+    # directory = elements.Path(config.logdir) / folder
+    # if config.replicas > 1:
+    #     directory /= f'{config.replica:05}'
     kwargs = dict(
         length=length, capacity=int(capacity), online=config.replay.online,
-        chunksize=config.replay.chunksize, directory=directory,
+        chunksize=config.replay.chunksize,
+        # turn off disk I/O of replay buffer
+        # since the replay buffer starts empty upon resuming,
+        # an unstable warming-up phase occurs until the buffer fills up again
+        # ckpt/, metrics.jsonl, config.yaml are still stored
+        # so that agent weights are restored upon resuming
+        directory=None,
+        # directory=directory,
     )
 
     if config.replay.fracs.uniform < 1 and mode == 'train':
