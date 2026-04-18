@@ -35,7 +35,14 @@ class DTPredictor(DynPredModel):
                 nn.Linear(p_dim, p_dim),
             )
 
-        clf_in_dim = 2 * p_dim if pass_h == 'all' else p_dim
+        self.raw_obs_branch = nn.Sequential(
+            nn.Linear(in_dim, p_dim),
+            nn.LayerNorm(p_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(p_dim, p_dim),
+        )
+
+        clf_in_dim = (2 * p_dim if pass_h == 'all' else p_dim) + p_dim
         self.classifier = nn.Sequential(
             nn.Linear(clf_in_dim, p_dim),
             nn.ReLU(inplace=True),
@@ -54,6 +61,7 @@ class DTPredictor(DynPredModel):
             parts.append(self.rtg_branch(enc_out.rtg_h_k.flatten(start_dim=1)))
         if enc_out.obs_h_k is not None:
             parts.append(self.obs_branch(enc_out.obs_h_k.flatten(start_dim=1)))
+        parts.append(self.raw_obs_branch(enc_out.obs_enc_k.flatten(start_dim=1)))
 
         fused = torch.cat(parts, dim=-1) if len(parts) > 1 else parts[0]
         return self.classifier(fused)

@@ -18,6 +18,7 @@ class DTOutput:
     obs_enc: torch.Tensor            # (B, T, H)
     rtg_h_k: Optional[torch.Tensor]  # (B, last_k, H) or None
     obs_h_k: Optional[torch.Tensor]  # (B, last_k, H) or None
+    obs_enc_k: torch.Tensor          # (B, last_k, H) raw CNN features
 
 
 class DecisionTransformer(DynEncModel):
@@ -128,4 +129,5 @@ class DecisionTransformer(DynEncModel):
             obs_enc=obs_enc,
             rtg_h_k=rtg_h_k,
             obs_h_k=obs_h_k,
+            obs_enc_k=obs_enc[:, -self.last_k:, :],
         )
