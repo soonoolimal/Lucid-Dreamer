@@ -112,10 +112,11 @@ def main(argv=None):
 
     scn_name = config.task.split('_', 1)[1]
     ckpt_dir = ROOT / f'logs/inception/{scn_name}/{ds_type}/{inc_timestamp}'
-    config = config.update(logdir=LOGDIR_TPL.format(
-        scn=scn_name,
-        timestamp=datetime.now(tz=KST).strftime('%y%m%d_%H%M%S'),
-    ))
+    ts = config.run.resume_timestamp or datetime.now(tz=KST).strftime('%y%m%d_%H%M%S')
+    logdir_str = LOGDIR_TPL.format(scn=scn_name, timestamp=ts)
+    if config.run.debug:
+        logdir_str = logdir_str.replace('logs/', 'logs/debug/', 1)
+    config = config.update(logdir=logdir_str)
     logdir = elements.Path(config.logdir)
     print('Logdir:', logdir)
     logdir.mkdir()
