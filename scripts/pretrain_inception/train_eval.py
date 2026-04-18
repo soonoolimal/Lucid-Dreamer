@@ -26,6 +26,7 @@ DYN_ENC_REGISTRY = {cls.__name__: cls for cls in DynEncModel.__subclasses__()}
 DYN_PRED_REGISTRY = {cls.__name__: cls for cls in DynPredModel.__subclasses__()}
 
 CKPT_DIR_TPL = 'logs/inception/{scn}/{ds_type}/{timestamp}'
+CKPT_DIR_TPL_DEBUG = 'logs/debug/inception/{scn}/{ds_type}/{timestamp}'
 
 
 def _parse_args(argv=None):
@@ -46,7 +47,8 @@ def main(argv=None):
         cfg = yaml.safe_load(f)['inception']
 
     timestamp = datetime.now(tz=KST).strftime('%y%m%d_%H%M%S')
-    run_dir = str(ROOT / CKPT_DIR_TPL.format(scn=args.scn, ds_type=args.ds_type, timestamp=timestamp))
+    tpl = CKPT_DIR_TPL_DEBUG if args.debug else CKPT_DIR_TPL
+    run_dir = str(ROOT / tpl.format(scn=args.scn, ds_type=args.ds_type, timestamp=timestamp))
     device = torch.device(args.device or cfg['device'])
 
     print(f'Device: {device}')

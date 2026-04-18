@@ -11,12 +11,12 @@ sys.path.insert(0, str(SCRIPTS_INC))
 
 import torch
 import torch.nn.functional as F
+import wandb
 import yaml
 from tqdm import tqdm
 
 import inception.models  # register all subclasses
 import inception.utils.load as ldu
-import wandb
 from inception.models.base import DynEncModel, DynPredModel, ObsEncModel
 
 OBS_ENC_REGISTRY = {cls.__name__: cls for cls in ObsEncModel.__subclasses__()}
@@ -78,6 +78,8 @@ def _print_results(cm, n_dynamics):
     macro_f1 = sum(f1s) / n_dynamics
     print(f"{'macro':<8} {macro_p:>10.4f} {macro_r:>10.4f} {macro_f1:>10.4f}")
 
+    return precisions, recalls, f1s
+
 
 def run_test(dye, dyp, test_loader, device, n_dynamics, wandb_cfg=None, logdir=None):
     """Run test inference and print results. Models must already be loaded."""
@@ -114,7 +116,7 @@ def run_test(dye, dyp, test_loader, device, n_dynamics, wandb_cfg=None, logdir=N
 
     print(f'\nTest CE loss: {ce_loss:.4f}')
     cm = _compute_cm(all_preds, all_labels, n_dynamics)
-    _print_results(cm, n_dynamics)
+    precisions, recalls, f1s = _print_results(cm, n_dynamics)
 
     acc = cm.diagonal().sum().item() / cm.sum().item()
     per_class_acc = {}
@@ -128,14 +130,26 @@ def run_test(dye, dyp, test_loader, device, n_dynamics, wandb_cfg=None, logdir=N
             json.dump(metrics, f, indent=2)
 
     if wandb_cfg is not None:
-        log = {'test/ce_loss': ce_loss, 'test/acc': acc,
-               **{f'test/acc_class{c}': v for c, v in per_class_acc.items()}}
+        class_names = [str(c) for c in range(n_dynamics)]
+        metrics_table = wandb.Table(
+            columns=['class', 'precision', 'recall', 'f1'],
+            data=[[c, precisions[c], recalls[c], f1s[c]] for c in range(n_dynamics)],
+        )
         wandb.init(
             project=wandb_cfg['project'],
             group=wandb_cfg['group'],
             name=wandb_cfg['run_name'],
         )
-        wandb.log(log)
+        wandb.log({
+            'test/ce_loss': ce_loss,
+            'test/acc': acc,
+            'test/confusion_matrix': wandb.plot.confusion_matrix(
+                y_true=all_labels.tolist(),
+                preds=all_preds.tolist(),
+                class_names=class_names,
+            ),
+            'test/per_class_metrics': metrics_table,
+        })
         wandb.finish()
 
 
