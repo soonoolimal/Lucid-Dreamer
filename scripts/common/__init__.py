@@ -134,6 +134,7 @@ def make_logger(config, job_type):
                 name=run_name, pattern=config.logger.wandb_filter,
                 project=project, group=wb_group, job_type=job_type,
                 id=wandb_id, resume='allow',
+                settings=wandb.Settings(init_timeout=300),
             ))
         else:
             raise NotImplementedError(output)
