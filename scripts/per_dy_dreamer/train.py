@@ -36,11 +36,15 @@ def main(argv=None):
 
     scn_name = config.task.split('_', 1)[1]
     dy_type = int(config.env.vizdoom.dy_type)
-    config = config.update(logdir=LOGDIR_TPL.format(
+    ts = config.run.resume_timestamp or datetime.now(tz=KST).strftime('%y%m%d_%H%M%S')
+    logdir_str = LOGDIR_TPL.format(
         scn=scn_name, dy_type=dy_type,
         suffix='_random' if config.random_agent else '',
-        timestamp=datetime.now(tz=KST).strftime('%y%m%d_%H%M%S'),
-    ))
+        timestamp=ts,
+    )
+    if config.run.debug:
+        logdir_str = logdir_str.replace('logs/', 'logs/debug/', 1)
+    config = config.update(logdir=logdir_str)
     logdir = elements.Path(config.logdir)
     print('Logdir:', logdir)
     logdir.mkdir()
@@ -277,8 +281,6 @@ def _collect_samples(agent, make_env, config, dy_type, step, n_eps, timestamp=No
     rews_arr = np.array(all_rews, dtype=np.float32)
     tout_arr = np.array(all_timeouts, dtype=np.float32)
 
-    max_ep_len = config.env.vizdoom.timeout // config.env.vizdoom.skip
-
     scn_name = config.task.split('_', 1)[1]
     ds_type = 'random' if config.random_agent else 'dreamer'
     data_dir = ROOT / 'data' / scn_name / ds_type
@@ -304,10 +306,8 @@ def _collect_samples(agent, make_env, config, dy_type, step, n_eps, timestamp=No
         with h5py.File(hdf5_path, 'w') as hf:
             for name, arr in datasets:
                 create_ds(hf, name, arr)
-            hf.attrs['timeout'] = max_ep_len
             hf.attrs['num_episodes'] = n_eps
             hf.attrs['act_dim'] = act_dim
-            hf.attrs['is_discrete'] = is_discrete
             hf.attrs['num_transitions'] = len(all_obs)
     else:
         with h5py.File(hdf5_path, 'a') as hf:
