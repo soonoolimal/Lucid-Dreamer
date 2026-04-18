@@ -189,6 +189,11 @@ class Replay:
         chunk = self.chunks.pop(chunkid)
         if chunk.succ in self.refs:
           self.refs[chunk.succ] -= 1
+        if self.directory and chunk.saved:
+          try:
+            (self.directory / chunk.filename).remove()
+          except Exception:
+            pass
 
   def _getseq(self, chunkid, index, keys=None, concat=True):
     chunk = self.chunks[chunkid]
