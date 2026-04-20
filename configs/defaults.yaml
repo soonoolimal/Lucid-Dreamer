@@ -3,6 +3,7 @@ run:
     n_sample_eps: 0
     debug: false
     resume_timestamp: ''
+    wandb_id: ''
 
 logger:
     outputs: [jsonl, scope, wandb]

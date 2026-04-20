@@ -27,8 +27,11 @@ python main.py continual_baseline --task vizdoom_DeadlyCorridor --seed 1
 
 To resume a crashed run:
 ```bash
-python main.py continual_baseline --task vizdoom_DeadlyCorridor --run.resume_timestamp 260418_030705
+python main.py continual_baseline --task vizdoom_DeadlyCorridor \
+    --run.resume_timestamp {timestamp} \
+    --run.wandb_id {wandb_run_id}
 ```
+`{wandb_run_id}`: the run ID from the wandb URL (`…/runs/<run_id>`). Omit to start a new wandb run.
 
 For debug:
 ```
@@ -59,12 +62,12 @@ python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_typ
 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 3
 ```
 
-To resume a crashed run, pass the timestamp of the original run:
+To resume a crashed run:
 ```bash
 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 1 \
-    --run.resume_timestamp 260418_030705
+    --run.resume_timestamp {timestamp} \
+    --run.wandb_id {wandb_run_id}
 ```
-This reuses the same logdir (`logs/per_dy_dreamer/.../260418_030705/`), loading the latest checkpoint and replay buffer from disk.
 
 For debug:
 ```bash
@@ -168,7 +171,8 @@ To resume a crashed run:
 python main.py lucid_dreamer \
     --ds_type dreamer \
     --inc_timestamp 260417_120000 \
-    --run.resume_timestamp 260418_030705
+    --run.resume_timestamp {timestamp} \
+    --run.wandb_id {wandb_run_id}
 ```
 
 For debug:
