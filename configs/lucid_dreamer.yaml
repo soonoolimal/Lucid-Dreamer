@@ -2,7 +2,7 @@ lucid_dreamer:
     logger.wandb_filter: 'score|length|fps|train/loss/|train/rand/|train/real_ac/|report/loss/|report/openloop/|report/policy_image|eval/loss/'
     logger.wandb_group: lucid_dreamer
     kick:
-        seq_len: 64
+        seq_len: 32
         n_confirm: 5
         gamma: 1.0
         target_rtg: 0.0

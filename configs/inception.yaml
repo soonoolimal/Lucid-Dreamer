@@ -11,7 +11,7 @@ inception:
         gamma: 1.0
         train_ratio: 0.7
         valid_ratio: 0.2
-        seq_len: 64
+        seq_len: 32
         batch_size: 64
         num_workers: 4
 
