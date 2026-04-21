@@ -63,7 +63,7 @@ def main(argv=None):
         valid_ratio=data_cfg['valid_ratio'],
     )
 
-    max_ep_len = train_sets[0].max_ep_len
+    max_ep_len = max(ds.max_ep_len for ds in train_sets)
     n_act = train_sets[0].n_act
     is_discrete = train_sets[0].is_discrete
 
