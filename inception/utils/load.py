@@ -206,10 +206,14 @@ class OfflineDataset(Dataset):
         ep_starts = np.concatenate([[0], ds.done_idxs[:-1]])
         ep_lens = ds.done_idxs - ep_starts
 
-        if ep_lens.min() < seq_len:
-            raise ValueError(
-                f'seq_len={seq_len} > shortest episode length ({ep_lens.min()})'
-            )
+        valid = ep_lens >= seq_len
+        n_dropped = int((~valid).sum())
+        if n_dropped > 0:
+            print(f'[OfflineDataset] dropping {n_dropped}/{len(valid)} episode(s) shorter than seq_len={seq_len}')
+        ep_starts = ep_starts[valid]
+        ep_lens = ep_lens[valid]
+        if len(ep_lens) == 0:
+            raise ValueError(f'No episodes with length >= seq_len={seq_len}')
 
         self.observations = ds.observations
         self.actions = ds.actions
