@@ -4,6 +4,7 @@ run:
     debug: false
     resume_timestamp: ''
     wandb_id: ''
+    from_checkpoint_regex: '.*'
 
 logger:
     outputs: [jsonl, scope, wandb]
