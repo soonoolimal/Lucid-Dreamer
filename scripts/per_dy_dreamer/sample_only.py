@@ -22,7 +22,7 @@ def _ckpt_path(scn, ts, argv):
         and argv[argv.index('--random_agent') + 1].lower() == 'true'
     )
     subdir = f'dy{dy_type}_random' if is_random else f'dy{dy_type}'
-    return str(ROOT / f'logs/per_dy_dreamer/{scn}/{subdir}/{ts}/ckpt')
+    return str(ROOT / f'logs/per_dy_dreamer/{scn}/{subdir}/{ts}/ckpt/latest')
 
 
 def main(argv=None):
