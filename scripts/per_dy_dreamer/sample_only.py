@@ -22,7 +22,7 @@ def _ckpt_path(scn, ts, argv):
         and argv[argv.index('--random_agent') + 1].lower() == 'true'
     )
     subdir = f'dy{dy_type}_random' if is_random else f'dy{dy_type}'
-    return str(ROOT / f'logs/per_dy_dreamer/{scn}/{subdir}/{ts}/ckpt/latest')
+    return str(ROOT / f'logs/per_dy_dreamer/{scn}/{subdir}/{ts}/ckpt')
 
 
 def main(argv=None):
@@ -60,7 +60,8 @@ def main(argv=None):
     assert config.run.from_checkpoint, '--run.from_checkpoint is required'
 
     agent = make_agent(config, bind(make_env, config))
-    elements.checkpoint.load(config.run.from_checkpoint, dict(
+    cp = elements.Checkpoint(config.run.from_checkpoint)
+    elements.checkpoint.load(cp.latest(), dict(
         agent=bind(agent.load, regex=config.run.from_checkpoint_regex)
     ))
 
