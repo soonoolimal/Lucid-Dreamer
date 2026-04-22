@@ -10,7 +10,7 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 
 import elements
 import portal
-from common import KST, load_configs, make_agent, make_env, resolve_checkpoint
+from common import KST, load_configs, make_agent, make_env, make_logger, resolve_checkpoint
 from per_dy_dreamer.train import _collect_samples
 
 
@@ -43,6 +43,10 @@ def main(argv=None):
     data_dir.mkdir(parents=True, exist_ok=True)
     config.save(str(data_dir / f'{timestamp}_dy{dy_type}_s{config.seed}_config.yaml'))
 
+    logdir_str = f'logs/per_dy_dreamer/{scn_name}/dy{dy_type}_sample/{timestamp}'
+    config = config.update(logdir=logdir_str)
+    elements.Path(config.logdir).mkdir()
+
     if 'JOB_COMPLETION_INDEX' in os.environ:
         config = config.update(replica=int(os.environ['JOB_COMPLETION_INDEX']))
     print('Replica:', config.replica, '/', config.replicas)
@@ -65,6 +69,8 @@ def main(argv=None):
         agent=bind(agent.load, regex=config.run.from_checkpoint_regex)
     ))
 
+    logger = make_logger(config, 'sample')
+
     _collect_samples(
         agent,
         bind(make_env, config),
@@ -73,7 +79,9 @@ def main(argv=None):
         step=0,  # dummy; only inference
         n_eps=int(config.run.n_sample_eps),
         timestamp=timestamp,
+        logger=logger,
     )
+    logger.close()
 
 
 if __name__ == '__main__':

@@ -220,7 +220,7 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args, con
     logger.close()
 
 
-def _collect_samples(agent, make_env, config, dy_type, step, n_eps, timestamp=None):
+def _collect_samples(agent, make_env, config, dy_type, step, n_eps, timestamp=None, logger=None):
     """Runs n_eps eval episodes to HDF5 for Inception training.
 
     Output: data/{scn}/{ds_type}/{timestamp}_dy{dy_type}_s{seed}.hdf5
@@ -246,9 +246,11 @@ def _collect_samples(agent, make_env, config, dy_type, step, n_eps, timestamp=No
 
     all_obs, all_acs, all_rews, all_timeouts = [], [], [], []
     carry = agent.init_policy(1)
+    ep_scores, ep_lengths = [], []
 
     for _ in range(n_eps):
         tran = env.step({'action': np.zeros((), np.int32), 'reset': np.array(True)})
+        ep_rew, ep_len = 0.0, 0
         while True:
             obs_in = {k: tran[k][None] for k in tran if not k.startswith('log/')}
             carry, action_out, _ = agent.policy(carry, obs_in, mode='eval')
@@ -263,6 +265,8 @@ def _collect_samples(agent, make_env, config, dy_type, step, n_eps, timestamp=No
                 gym_action = {'action': np.int32(binary), 'action_cont': cont, 'reset': np.array(False)}
 
             next_tran = env.step(gym_action)
+            ep_rew += float(next_tran['reward'])
+            ep_len += 1
 
             all_obs.append(tran['image'])
             all_acs.append(ac_vec)
@@ -270,6 +274,12 @@ def _collect_samples(agent, make_env, config, dy_type, step, n_eps, timestamp=No
             all_timeouts.append(1.0 if next_tran['is_last'] else 0.0)
 
             if next_tran['is_last']:
+                ep_scores.append(ep_rew)
+                ep_lengths.append(ep_len)
+                if logger is not None:
+                    logger.step.increment(ep_len)
+                    logger.add({'score': ep_rew, 'length': ep_len}, prefix='episode')
+                    logger.write()
                 break
 
             tran = next_tran
