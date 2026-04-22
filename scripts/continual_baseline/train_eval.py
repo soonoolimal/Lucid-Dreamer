@@ -214,6 +214,7 @@ def train_eval(make_agent, make_replay_train, make_replay_eval, make_env_train, 
 
         if should_save(step):
             cp.save()
+            logger.write()
 
     logger.close()
 

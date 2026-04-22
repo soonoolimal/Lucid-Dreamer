@@ -373,6 +373,7 @@ def train_eval(
 
         if should_save(step):
             cp.save()
+            logger.write()
 
     logger.close()
 

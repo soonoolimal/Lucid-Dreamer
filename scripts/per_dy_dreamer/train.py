@@ -212,6 +212,7 @@ def train(make_agent, make_replay, make_env, make_stream, make_logger, args, con
 
         if should_save(step):
             cp.save()
+            logger.write()
 
         if args.sample_every > 0 and int(step) >= next_sample_step[0]:
             _collect_samples(agent, make_env, config, dy_type, int(step), int(args.n_sample_eps), timestamp=sample_timestamp)

@@ -42,10 +42,8 @@ class VizDoom(embodied.Env):
             f'Vizdoom{scn_name}-v1',
             scenario_config_file=str(cfg_path),
             render_mode='rgb_array',
+            frame_skip=skip,
         )
-
-        if skip > 1:
-            env = vdw.SkipFrame(env, skip)
 
         if rew_shift is not None:
             env = vdw.ShiftReward(env, rew_shift)

@@ -5,18 +5,19 @@ run:
     resume_timestamp: ''
     wandb_id: ''
     from_checkpoint_regex: '.*'
+    save_every: 120
 
 logger:
     outputs: [jsonl, scope, wandb]
     wandb_filter: 'score|length|fps|train/loss/|train/rand/|report/loss/|report/openloop/|report/policy_image|eval/loss/'
-    wandb_project: Lucid-Dreamer
+    wandb_project: Lucid-Dreamer-v1
     wandb_group: ''
 
 env:
     vizdoom:
         skip: 4
         level: 3
-        timeout: 525
+        timeout: 2100
         size: 64
         cheat: false
         switch_every: 1.5e6

@@ -3,19 +3,6 @@ import gymnasium as gym
 import vizdoom as vzd
 
 
-class SkipFrame(gym.Wrapper):
-    def __init__(self, env, skip):
-        super().__init__(env)
-        self._skip = skip
-
-    def step(self, action):
-        for _ in range(self._skip):
-            obs, rew, term, trunc, info = self.env.step(action)
-            if term or trunc:
-                break
-        return obs, rew, term, trunc, info  # only final reward, not cumulative
-
-
 class ResizeObservation(gym.Wrapper):
     def __init__(self, env, size):
         super().__init__(env)

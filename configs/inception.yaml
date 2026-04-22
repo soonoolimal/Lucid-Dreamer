@@ -4,7 +4,7 @@ inception:
     device: cuda
 
     wandb:
-        project: Lucid-Dreamer
+        project: Lucid-Dreamer-v1
         group: inception
 
     data:

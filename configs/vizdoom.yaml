@@ -1,29 +1,29 @@
 vizdoom_lucid:
     task: vizdoom_DeadlyCorridor
-    env.vizdoom.switch_every: 1.5e6
+    env.vizdoom.switch_every: 4e6
     run:
-        steps: 6e6
+        steps: 16e6
         train_ratio: 32
         log_every: 30
-        report_every: 20000
+        report_every: 50000
 
 vizdoom_continual:
     task: vizdoom_DeadlyCorridor
-    env.vizdoom.switch_every: 1.5e6
+    env.vizdoom.switch_every: 4e6
     logger.wandb_group: continual_baseline
     run:
-        steps: 6e6
+        steps: 16e6
         train_ratio: 32
         log_every: 30
-        report_every: 20000
+        report_every: 50000
 
 vizdoom_fixed:
     task: vizdoom_DeadlyCorridor
     logger.wandb_group: per_dy_dreamer
     run:
-        steps: 2e6
+        steps: 4e6
         train_ratio: 32
         log_every: 30
-        report_every: 20000
+        report_every: 50000
         sample_every: 100000
         n_sample_eps: 25
