@@ -49,7 +49,7 @@ inception:
             grad_clip_obs: 10.0
             log_grad_norm: true
             stop_gradient: false
-            num_epochs: 50
+            num_epochs: 100
             patience: 5
             epoch_save_interval: 5
             load_only: false
@@ -62,7 +62,7 @@ inception:
             lr: 1.0e-3
             weight_decay: 1.0e-4
             betas: [0.9, 0.95]
-            num_epochs: 50
+            num_epochs: 100
             patience: 5
             epoch_save_interval: 5
             load_only: false
