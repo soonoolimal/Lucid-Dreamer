@@ -10,7 +10,7 @@ run:
 logger:
     outputs: [jsonl, scope, wandb]
     wandb_filter: 'score|length|fps|train/loss/|train/rand/|report/loss/|report/openloop/|report/policy_image|eval/loss/'
-    wandb_project: Lucid-Dreamer-v1
+    wandb_project: Lucid-Dreamer-v2
     wandb_group: ''
 
 env:
