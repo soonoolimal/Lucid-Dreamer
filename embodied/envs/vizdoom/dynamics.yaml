@@ -1,6 +1,6 @@
 scn_dir: scenarios
 
-rew_shifts: [survive, recover]
+rew_shifts: [survive, recover, kill]
 
 DeadlyCorridor:
   id: deadly_corridor
@@ -10,9 +10,9 @@ DeadlyCorridor:
   death_penalty: 100
   n_dynamics: 4
   0: {obs_shift: null, rew_shift: null}
-  1: {obs_shift: null, rew_shift: survive}
+  1: {obs_shift: null, rew_shift: kill}
   2: {obs_shift: BIGBRIK1-to-TEKWALL4, rew_shift: null}
-  3: {obs_shift: BIGBRIK1-to-TEKWALL4, rew_shift: survive}
+  3: {obs_shift: BIGBRIK1-to-TEKWALL4, rew_shift: kill}
 
 DefendLine:
   id: defend_the_line
