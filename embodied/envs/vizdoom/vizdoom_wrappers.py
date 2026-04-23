@@ -60,10 +60,12 @@ class ShiftReward(gym.Wrapper):
         self._game: vzd.DoomGame = env.unwrapped.game
         self._rew_shift = rew_shift
         self._prev_hp = None
+        self._prev_killcount = None
 
     def reset(self, **kwargs):
         obs, info = self.env.reset(**kwargs)
         self._prev_hp = self._game.get_game_variable(vzd.GameVariable.HEALTH)
+        self._prev_killcount = self._game.get_game_variable(vzd.GameVariable.KILLCOUNT)
         return obs, info
 
     def step(self, action):
@@ -74,6 +76,10 @@ class ShiftReward(gym.Wrapper):
             rew = 1.0 if now_hp == self._prev_hp else 0.0
         elif self._rew_shift == 'recover':
             rew = 1.0 if now_hp > self._prev_hp else 0.0
+        elif self._rew_shift == 'kill':
+            now_kc = self._game.get_game_variable(vzd.GameVariable.KILLCOUNT)
+            rew = float(now_kc - self._prev_killcount)
+            self._prev_killcount = now_kc
 
         self._prev_hp = now_hp
 
