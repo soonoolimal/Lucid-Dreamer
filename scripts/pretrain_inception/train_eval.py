@@ -36,6 +36,7 @@ def _parse_args(argv=None):
     parser.add_argument('--timestamps', nargs='+', default=None,
                         help='Per-dy_type HDF5 timestamps (n_dynamics values). Auto-detect if omitted.')
     parser.add_argument('--device', default=None)
+    parser.add_argument('--wandb_project', default=None, help='Override wandb project name.')
     parser.add_argument('--debug', action='store_true')
     return parser.parse_args(argv)
 
@@ -112,7 +113,7 @@ def main(argv=None):
         cfg['dyn_pred']['train_kw'].update(cfg['debug']['dyn_pred']['train_kw'])
 
     run_name_base = f"{args.scn}/{args.ds_type}/{timestamp}"
-    wandb_project = cfg['wandb']['project']
+    wandb_project = args.wandb_project or cfg['wandb']['project']
     wandb_group = cfg['wandb']['group']
     if args.debug:
         run_name_base = 'debug_' + run_name_base
