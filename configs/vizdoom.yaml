@@ -1,4 +1,13 @@
+_vizdoom_agent: &vizdoom_agent
+    agent.imag_loss.actent: 3e-3
+    agent.policy.unimix: 0.03
+    agent.loss_scales.rew: 2.0
+    agent.loss_scales.con: 2.0
+    agent.dyn.rssm.unimix: 0.03
+    agent.imag_length: 30
+
 vizdoom_lucid:
+    <<: *vizdoom_agent
     task: vizdoom_DeadlyCorridor
     env.vizdoom.switch_every: 5e6
     run:
@@ -8,6 +17,7 @@ vizdoom_lucid:
         report_every: 50000
 
 vizdoom_continual:
+    <<: *vizdoom_agent
     task: vizdoom_DeadlyCorridor
     env.vizdoom.switch_every: 5e6
     logger.wandb_group: continual_baseline
@@ -18,6 +28,7 @@ vizdoom_continual:
         report_every: 50000
 
 vizdoom_fixed:
+    <<: *vizdoom_agent
     task: vizdoom_DeadlyCorridor
     logger.wandb_group: per_dy_dreamer
     run:

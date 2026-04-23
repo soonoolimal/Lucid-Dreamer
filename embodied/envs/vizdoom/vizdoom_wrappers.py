@@ -54,6 +54,48 @@ class VirtualDeathReward(gym.Wrapper):
         return obs, rew, term, trunc, info
 
 
+class AddKillReward(gym.Wrapper):
+    """Adds kill reward on top of the existing base reward (additive, does not replace)."""
+    def __init__(self, env, kill_reward):
+        super().__init__(env)
+        self._game: vzd.DoomGame = env.unwrapped.game
+        self._kill_reward = kill_reward
+        self._prev_killcount = None
+
+    def reset(self, **kwargs):
+        obs, info = self.env.reset(**kwargs)
+        self._prev_killcount = self._game.get_game_variable(vzd.GameVariable.KILLCOUNT)
+        return obs, info
+
+    def step(self, action):
+        obs, rew, term, trunc, info = self.env.step(action)
+        now_kc = self._game.get_game_variable(vzd.GameVariable.KILLCOUNT)
+        rew += self._kill_reward * float(now_kc - self._prev_killcount)
+        self._prev_killcount = now_kc
+        return obs, rew, term, trunc, info
+
+
+class AddSurviveReward(gym.Wrapper):
+    """Adds +1 each step HP is unchanged, on top of existing reward (additive, does not replace)."""
+    def __init__(self, env):
+        super().__init__(env)
+        self._game: vzd.DoomGame = env.unwrapped.game
+        self._prev_hp = None
+
+    def reset(self, **kwargs):
+        obs, info = self.env.reset(**kwargs)
+        self._prev_hp = self._game.get_game_variable(vzd.GameVariable.HEALTH)
+        return obs, info
+
+    def step(self, action):
+        obs, rew, term, trunc, info = self.env.step(action)
+        now_hp = self._game.get_game_variable(vzd.GameVariable.HEALTH)
+        if now_hp == self._prev_hp:
+            rew += 1.0
+        self._prev_hp = now_hp
+        return obs, rew, term, trunc, info
+
+
 class ShiftReward(gym.Wrapper):
     def __init__(self, env, rew_shift):
         super().__init__(env)

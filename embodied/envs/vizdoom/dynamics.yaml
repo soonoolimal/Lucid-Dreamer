@@ -8,11 +8,12 @@ DeadlyCorridor:
   act_dim: 7
   natural_hp: 100
   death_penalty: 100
+  kill_base: 25.0
   n_dynamics: 4
   0: {obs_shift: null, rew_shift: null}
-  1: {obs_shift: null, rew_shift: kill}
+  1: {obs_shift: null, rew_shift: survive}
   2: {obs_shift: BIGBRIK1-to-TEKWALL4, rew_shift: null}
-  3: {obs_shift: BIGBRIK1-to-TEKWALL4, rew_shift: kill}
+  3: {obs_shift: BIGBRIK1-to-TEKWALL4, rew_shift: survive}
 
 DefendLine:
   id: defend_the_line

@@ -45,10 +45,19 @@ class VizDoom(embodied.Env):
             frame_skip=skip,
         )
 
-        if rew_shift is not None:
-            env = vdw.ShiftReward(env, rew_shift)
-        elif cheat and meta.get('natural_hp') is not None:
-            env = vdw.VirtualDeathReward(env, meta['natural_hp'], meta['death_penalty'])
+        kill_base = meta.get('kill_base')
+        if kill_base is not None:
+            # kill_base mode: additive stack on top of distance base
+            env = vdw.AddKillReward(env, kill_base)
+            if rew_shift == 'survive':
+                env = vdw.AddSurviveReward(env)
+            elif rew_shift is not None:
+                env = vdw.ShiftReward(env, rew_shift)
+        else:
+            if rew_shift is not None:
+                env = vdw.ShiftReward(env, rew_shift)
+            elif cheat and meta.get('natural_hp') is not None:
+                env = vdw.VirtualDeathReward(env, meta['natural_hp'], meta['death_penalty'])
 
         game: vzd.DoomGame = env.unwrapped.game
 
