@@ -22,3 +22,15 @@ env:
         cheat: false
         switch_every: 1.5e6
         dy_type: 0
+
+kick:
+    seq_len: 32
+    n_confirm: 5
+    gamma: 1.0
+    target_rtg: 0.0
+    ema_alpha: 0.05
+    warmup_steps: 1e4
+
+inception:
+    seed: 0
+    device: cuda
