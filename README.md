@@ -9,9 +9,15 @@ conda env create -f conda_env.yaml
 conda activate lucid-dreamer
 ```
 
+To build default scenarios:
 ```bash
-python -m embodied.envs.vizdoom.build_scenarios          # default variants
-python -m embodied.envs.vizdoom.build_scenarios --cheat  # cheat variants (required for random agent; needs ACC)
+python -m embodied.envs.vizdoom.build_scenarios
+```
+
+To build cheat scenarios:
+
+```bash
+python -m embodied.envs.vizdoom.build_scenarios --cheat  # required for random agent; needs ACC
 ```
 
 ## 0. Baseline
@@ -22,7 +28,6 @@ Baseline performance of DreamerV3 under non-stationary VizDoom dynamics.
 
 ```bash
 python main.py continual_baseline --task vizdoom_DeadlyCorridor
-python main.py continual_baseline --task vizdoom_DeadlyCorridor --seed 1
 ```
 
 To resume a crashed run:
@@ -57,14 +62,11 @@ HDF5 samples are saved to `data/{scn}/dreamer/{timestamp}_dy{dy_type}_s{seed}.hd
 
 ```bash
 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0
-python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 1
-python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 2
-python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 3
 ```
 
 To resume a crashed run:
 ```bash
-python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 1 \
+python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0 \
     --run.resume_timestamp {timestamp} \
     --run.wandb_id {wandb_run_id}
 ```
@@ -72,11 +74,6 @@ python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_typ
 For debug:
 ```bash
 python main.py per_dy_dreamer --configs defaults vizdoom_fixed debug --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0
-```
-
-To run all dy_types in parallel across GPUs:
-```bash
-CUDA_VISIBLE_DEVICES=0 python main.py per_dy_dreamer --task vizdoom_DeadlyCorridor --env.vizdoom.dy_type 0
 ```
 
 ### 1.2. Random Agent Sampling
@@ -101,7 +98,7 @@ python main.py per_dy_dreamer --sample \
     --task vizdoom_DeadlyCorridor \
     --env.vizdoom.dy_type 0 \
     --timestamp {timestamp} \
-    --run.n_sample_eps 50
+    --run.n_sample_eps 1000
 ```
 
 Random agent checkpoint:
@@ -111,7 +108,7 @@ python main.py per_dy_dreamer --sample \
     --env.vizdoom.dy_type 0 \
     --random_agent True \
     --timestamp {timestamp} \
-    --run.n_sample_eps 50
+    --run.n_sample_eps 1000
 ```
 
 ## 2. Inception Pretraining
