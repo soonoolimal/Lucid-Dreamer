@@ -111,7 +111,8 @@ def main(argv=None):
     config = elements.Flags(config).parse(other)
 
     scn_name = config.task.split('_', 1)[1]
-    ckpt_dir = ROOT / f'logs/inception/{scn_name}/{ds_type}/{inc_timestamp}'
+    inc_base = 'logs/debug/inception' if config.run.debug else 'logs/inception'
+    ckpt_dir = ROOT / f'{inc_base}/{scn_name}/{ds_type}/{inc_timestamp}'
     ts = config.run.resume_timestamp or datetime.now(tz=KST).strftime('%y%m%d_%H%M%S')
     logdir_str = LOGDIR_TPL.format(scn=scn_name, timestamp=ts)
     if config.run.debug:
@@ -190,6 +191,7 @@ def main(argv=None):
         is_discrete,
         config.kick.target_rtg,
         config.kick.ema_alpha,
+        int(config.kick.warmup_steps),
     )
 
 
@@ -198,7 +200,7 @@ def train_eval(
     make_env_train, make_env_eval,
     make_stream, make_logger,
     args,
-    kick, is_discrete, init_target_rtg, ema_alpha,
+    kick, is_discrete, init_target_rtg, ema_alpha, warmup_steps,
 ):
     agent = make_agent()
     replay_train = make_replay_train()
@@ -317,8 +319,8 @@ def train_eval(
         for _ in range(should_train(step)):
             with elements.timer.section('stream_next'):
                 batch = next(stream_train)
-            real = bool(kick_flag[0]) if kick_flag[0] is not None else False
-            carry_train[0], outs, mets = agent.train(carry_train[0], batch, real=real)
+            agent._real_mode = (step < warmup_steps) or (bool(kick_flag[0]) if kick_flag[0] is not None else False)
+            carry_train[0], outs, mets = agent.train(carry_train[0], batch)
             train_fps.step(batch_steps)
             if 'replay' in outs:
                 replay_train.update(outs['replay'])
