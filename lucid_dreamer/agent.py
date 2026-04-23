@@ -11,7 +11,8 @@ from dreamerv3.agent import (
 
 class LucidDreamerAgent(Agent):
     """Inception-based Dreamerv3 agent."""
-    def train(self, carry, data, real=False):
+    def train(self, carry, data):
+        real = getattr(self, '_real_mode', False)
         carry, obs, prevact, stepid = self._apply_replay_context(carry, data)
 
         metrics, (carry, entries, outs, mets) = self.opt(
