@@ -1,5 +1,7 @@
 # Lucid Dreamer
 
+Lucid Dreamer: An adaptive model-based RL algorithm for continual learning in non-stationary dynamics based on DreamerV3 and Decision Transformer; like waking up from a lucid dream through Kick after Inception.
+
 ## Setup
 
 Requires CUDA 12.8 (cu128).
